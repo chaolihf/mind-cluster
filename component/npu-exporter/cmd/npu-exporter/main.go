@@ -15,6 +15,8 @@
 // Package main
 package main
 
+import "C"
+
 import (
 	"context"
 	"errors"
@@ -38,6 +40,7 @@ import (
 	"ascend-common/common-utils/limiter"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/config"
 	"huawei.com/npu-exporter/v6/collector/container"
@@ -102,7 +105,10 @@ const (
 	defaultHccsBwProfilingTime = 200
 )
 
-func main() {
+func main() {}
+
+//export NpuServer
+func NpuServer() {
 	flag.Parse()
 	if version {
 		fmt.Printf("NPU-exporter version: %s \n", versions.BuildVersion)
