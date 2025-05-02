@@ -79,3 +79,9 @@
 | v6.0.0     | 2024-12-15 | 配套MindX 6.0.0版本   |
 # 版本配套说明
 版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/commercial)
+
+# 独立包修改
+全局替换：
+ascend-common/ 为 github.com/chaolihf/mind-cluster/component/ascend-common/
+huawei.com/npu-exporter/v6/ 为 github.com/chaolihf/mind-cluster/component/npu-exporter/
+删除对应的go.mod,go.sum文件
