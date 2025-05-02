@@ -1,0 +1,5 @@
+[INFO]     2025/05/02 16:21:31.698665 1       hwlog/api.go:108    npu-exporter.log's logger init success
+[ERROR]    2025/05/02 16:21:42.518999 1       npu-exporter/main.go:191    the listen ip is invalid
+[INFO]     2025/05/02 16:22:48.836461 1       hwlog/api.go:108    npu-exporter.log's logger init success
+[ERROR]    2025/05/02 16:22:59.681120 1       devmanager/devmanager.go:114    deviceManager init failed, prepare dcmi failed, err: cannot found valid driver lib, fromEnv: lib path is invalid, [], fromLdCmd: can't find valid lib: EOF
+[ERROR]    2025/05/02 16:23:02.667299 1       npu-exporter/main.go:131    new npu collector failed, error is auto init failed, err: get chip info failed, err: device Manager is nil, may encounter an exception during initialization. You can check the system log to confirm
