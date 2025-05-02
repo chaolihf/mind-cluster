@@ -9,11 +9,12 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

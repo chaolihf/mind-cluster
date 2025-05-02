@@ -12,7 +12,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (

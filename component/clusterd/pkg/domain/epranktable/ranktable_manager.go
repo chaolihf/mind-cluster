@@ -8,9 +8,10 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/util/workqueue"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // epGlobalRankTableManager ep global rank table manager

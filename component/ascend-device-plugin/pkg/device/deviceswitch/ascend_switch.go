@@ -23,11 +23,12 @@ import (
 	"time"
 	"unsafe"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 
 	"Ascend-device-plugin/pkg/common"
-	devmanagercommon "ascend-common/devmanager/common"
+
+	devmanagercommon "github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 /*

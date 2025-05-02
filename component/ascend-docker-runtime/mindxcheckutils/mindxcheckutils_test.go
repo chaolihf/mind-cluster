@@ -27,7 +27,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

@@ -9,9 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 func TestUpdateStatistic(t *testing.T) {

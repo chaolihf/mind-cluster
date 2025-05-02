@@ -29,9 +29,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const retryTime = 3

@@ -15,9 +15,10 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 func init() {

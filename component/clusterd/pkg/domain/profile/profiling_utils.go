@@ -12,9 +12,10 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // DataTraceController data trace controller is used to manage datatrace

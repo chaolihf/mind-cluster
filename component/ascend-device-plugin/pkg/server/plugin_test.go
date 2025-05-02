@@ -34,8 +34,9 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/kubeclient"
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (

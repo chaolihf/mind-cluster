@@ -6,8 +6,9 @@ package collector
 import (
 	"sync"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var DeviceCmCollectBuffer *ConfigmapCollectBuffer[*constant.DeviceInfo]

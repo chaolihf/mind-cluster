@@ -10,10 +10,11 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

@@ -22,9 +22,10 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/framework_backend/worker/monitor/profiling"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // InitHwLog init hwlog

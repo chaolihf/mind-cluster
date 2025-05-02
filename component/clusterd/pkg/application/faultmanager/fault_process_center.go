@@ -7,14 +7,15 @@ import (
 	"context"
 	"time"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess"
 	"clusterd/pkg/application/faultmanager/jobprocess"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/collector"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // GlobalFaultProcessCenter is a global instance of faultProcessCenter used for processing faults.

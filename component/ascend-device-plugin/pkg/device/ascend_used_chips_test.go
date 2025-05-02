@@ -35,7 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
-	npuCommon "ascend-common/devmanager/common"
+
+	npuCommon "github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 // TestGetUseChips for test GetUsedChips

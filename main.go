@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/chaolihf/mind-cluster/component/npu_exporter/cmd/npu_exporter"
+	npu_exporter "github.com/chaolihf/mind-cluster/component/npu-exporter/cmd/npu-exporter"
 )
 
 func main() {

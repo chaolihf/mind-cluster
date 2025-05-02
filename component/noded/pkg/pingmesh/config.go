@@ -20,8 +20,9 @@ Package pingmesh is using for checking hccs network
 package pingmesh
 
 import (
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/kubeclient"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

@@ -29,8 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"Ascend-device-plugin/pkg/common"
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // Similar to the K8s metadata structure

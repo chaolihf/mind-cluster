@@ -26,8 +26,9 @@ import (
 	"github.com/pelletier/go-toml"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

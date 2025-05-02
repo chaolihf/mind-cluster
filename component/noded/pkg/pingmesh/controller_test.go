@@ -33,13 +33,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"ascend-common/api"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/pingmesh/consts"
 	"nodeD/pkg/pingmesh/executor"
 	"nodeD/pkg/pingmesh/resulthandler"
 	"nodeD/pkg/pingmesh/types"
 	_ "nodeD/pkg/testtool"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 const (

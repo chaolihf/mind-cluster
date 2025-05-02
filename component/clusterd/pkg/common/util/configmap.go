@@ -8,7 +8,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // IsNSAndNameMatched check whether its namespace and name match the configmap

@@ -34,9 +34,10 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
-	"ascend-common/api"
-	"ascend-common/devmanager"
-	devcommon "ascend-common/devmanager/common"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager"
+	devcommon "github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 const (

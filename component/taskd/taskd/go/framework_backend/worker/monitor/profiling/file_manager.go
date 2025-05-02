@@ -29,8 +29,9 @@ import (
 	"strconv"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // GlobalRankId is the global rank id pass in by python api

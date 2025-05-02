@@ -22,7 +22,8 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
-	"ascend-common/common-utils/hwlog"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // ResetInfoMgr mgr for npu reset

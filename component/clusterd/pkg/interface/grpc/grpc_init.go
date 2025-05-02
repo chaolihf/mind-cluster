@@ -11,8 +11,6 @@ import (
 
 	"google.golang.org/grpc"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/limiter"
 	configSvc "clusterd/pkg/application/config"
 	faultSvc "clusterd/pkg/application/fault"
 	"clusterd/pkg/application/profiling"
@@ -24,6 +22,9 @@ import (
 	pbprofiling "clusterd/pkg/interface/grpc/profiling"
 	"clusterd/pkg/interface/grpc/pubfault"
 	"clusterd/pkg/interface/grpc/recover"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/limiter"
 )
 
 // ClusterInfoMgrServer is a server of clusterd

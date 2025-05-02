@@ -27,7 +27,7 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/common-utils/utils"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 const (

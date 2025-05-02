@@ -11,13 +11,14 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 // RelationProcessor network relation fault process

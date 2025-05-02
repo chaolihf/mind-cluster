@@ -47,12 +47,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 
-	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable"
 	"ascend-operator/pkg/ranktable/generator"
 	_ "ascend-operator/pkg/testtool"
 	"ascend-operator/pkg/utils"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 func newCommonReconciler() *ASJobReconciler {

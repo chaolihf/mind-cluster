@@ -36,11 +36,12 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
-	"ascend-common/devmanager"
-	npuCommon "ascend-common/devmanager/common"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager"
+	npuCommon "github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 var resourceVersion = ""

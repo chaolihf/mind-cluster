@@ -8,9 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/faultdomain/cmmanager"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 type baseFaultCenter[T constant.ConfigMapInterface] struct {

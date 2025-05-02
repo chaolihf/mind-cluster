@@ -24,8 +24,9 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/server"
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager"
 )
 
 const (

@@ -16,9 +16,10 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"golang.org/x/time/rate"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/job"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 func init() {

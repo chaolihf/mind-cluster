@@ -24,8 +24,9 @@ import (
 
 	"k8s.io/client-go/util/workqueue"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/pingmesh/types"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // Interface is interface for handle pingmesh result

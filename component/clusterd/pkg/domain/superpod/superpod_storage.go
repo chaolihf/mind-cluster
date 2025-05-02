@@ -6,8 +6,8 @@ package superpod
 import (
 	"sync"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

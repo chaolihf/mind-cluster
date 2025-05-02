@@ -28,8 +28,6 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/pingmesh/consts"
 	"nodeD/pkg/pingmesh/executor"
 	"nodeD/pkg/pingmesh/policygenerator"
@@ -40,6 +38,9 @@ import (
 	"nodeD/pkg/pingmesh/types"
 	"nodeD/pkg/pingmesh/watcher"
 	"nodeD/pkg/pingmesh/watcher/configmap"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // Manager is the controller for pingmesh

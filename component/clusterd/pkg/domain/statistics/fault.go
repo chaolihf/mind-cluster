@@ -9,11 +9,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // UpdateFaultToCM update fault cache to configmap statistic-fault-info

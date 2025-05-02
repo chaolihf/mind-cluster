@@ -18,11 +18,12 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
-	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/utils"
 	_ "ascend-operator/pkg/testtool"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 func TestWriteToFile(t *testing.T) {

@@ -12,8 +12,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (

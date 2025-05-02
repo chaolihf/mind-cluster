@@ -22,8 +22,9 @@ import (
 
 	"github.com/u-root/u-root/pkg/ipmi"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var currentAlarmReq = []byte{0x30, 0x94, 0xDB, 0x07, 0x00, 0x40, 0x00, 0x00, 0x00, 0x0E, 0xFF}

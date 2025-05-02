@@ -9,11 +9,12 @@ import (
 	"strconv"
 	"time"
 
-	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 const (

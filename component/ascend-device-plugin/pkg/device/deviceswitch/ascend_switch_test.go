@@ -22,7 +22,8 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"Ascend-device-plugin/pkg/common"
-	devmanagercommon "ascend-common/devmanager/common"
+
+	devmanagercommon "github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 const (

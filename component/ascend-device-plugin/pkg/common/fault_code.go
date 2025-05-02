@@ -26,9 +26,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
-	"ascend-common/devmanager/common"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 const (

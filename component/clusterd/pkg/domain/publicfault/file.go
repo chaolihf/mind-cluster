@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"clusterd/pkg/common/util"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 var (

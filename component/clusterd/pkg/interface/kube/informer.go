@@ -17,8 +17,6 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/informers/externalversions"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
@@ -26,6 +24,9 @@ import (
 	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/domain/superpod"
 	"clusterd/pkg/domain/switchinfo"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (

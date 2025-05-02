@@ -29,10 +29,11 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
-	"ascend-common/common-utils/utils"
 	"nodeD/pkg/common"
 	"nodeD/pkg/control"
 	"nodeD/pkg/kubeclient"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 var configManager *FaultConfigurator

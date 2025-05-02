@@ -11,9 +11,10 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 
-	"ascend-common/api"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 var (

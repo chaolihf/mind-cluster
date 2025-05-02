@@ -23,8 +23,9 @@ import (
 	"github.com/containerd/containerd/services/server/config"
 	"github.com/pelletier/go-toml"
 
-	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // ContainerdProcess modifies the containerd configuration file when installing or uninstalling the containerd scenario.

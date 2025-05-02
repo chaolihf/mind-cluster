@@ -19,7 +19,7 @@ Package types is all type of hccsping mesh
 */
 package types
 
-import "ascend-common/devmanager/common"
+import "github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 
 // HccspingMeshConfig is the configuration for the pingmesh component
 type HccspingMeshConfig struct {

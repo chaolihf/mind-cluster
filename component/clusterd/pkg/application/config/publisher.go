@@ -22,9 +22,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/interface/grpc/config"
 	"clusterd/pkg/interface/grpc/fault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

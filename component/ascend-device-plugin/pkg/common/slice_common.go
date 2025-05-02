@@ -18,7 +18,7 @@ package common
 import (
 	"strconv"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 type int32Tool struct {

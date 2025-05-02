@@ -171,9 +171,10 @@ import (
 	"runtime"
 	"unsafe"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 var requestSem = make(chan struct{}, constant.MaxRequestBufferNum)

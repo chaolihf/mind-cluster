@@ -29,7 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"Ascend-device-plugin/pkg/common"
-	"ascend-common/common-utils/hwlog"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (

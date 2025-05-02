@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 const (

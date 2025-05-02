@@ -24,10 +24,11 @@ import (
 	"syscall"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/worker/monitor/profiling"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var ctx context.Context = context.Background()

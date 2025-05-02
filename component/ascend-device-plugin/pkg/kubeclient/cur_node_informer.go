@@ -24,7 +24,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"Ascend-device-plugin/pkg/common"
-	"ascend-common/common-utils/hwlog"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // InitPodInformer init pod informer

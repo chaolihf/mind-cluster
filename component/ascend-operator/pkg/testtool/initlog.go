@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // this is for llt

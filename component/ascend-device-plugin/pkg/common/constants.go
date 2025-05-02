@@ -18,7 +18,7 @@ package common
 import (
 	"time"
 
-	"ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 const (

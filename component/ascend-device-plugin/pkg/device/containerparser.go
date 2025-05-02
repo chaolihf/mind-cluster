@@ -31,8 +31,9 @@ import (
 	"github.com/containerd/containerd/oci"
 
 	"Ascend-device-plugin/pkg/common"
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 const (

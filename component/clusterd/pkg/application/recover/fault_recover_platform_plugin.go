@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 func platFormStrategy(name, namespace string, confirmState bool) (string, error) {

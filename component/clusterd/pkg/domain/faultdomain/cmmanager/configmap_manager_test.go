@@ -8,8 +8,9 @@ import (
 	"sync"
 	"testing"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 func TestMain(m *testing.M) {

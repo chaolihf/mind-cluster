@@ -7,11 +7,12 @@ import (
 	"context"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/publicfault"
 	"clusterd/pkg/domain/statistics"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // StatisticFault statistic fault cache

@@ -10,10 +10,11 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/publicfault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 // WatchPubFaultCustomFile watch file /user1/mindx-dl/clusterd/publicCustomization.json

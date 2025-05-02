@@ -25,8 +25,9 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // ProfileTaskQueue is a global task queue

@@ -18,7 +18,7 @@ package control
 import (
 	"github.com/u-root/u-root/pkg/ipmi"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (

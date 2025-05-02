@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // WriteToFile write data to file

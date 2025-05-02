@@ -22,7 +22,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 var (

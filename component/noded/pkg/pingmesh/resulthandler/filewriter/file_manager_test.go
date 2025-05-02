@@ -29,10 +29,11 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager/common"
 	"nodeD/pkg/pingmesh/types"
 	_ "nodeD/pkg/testtool"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 func patchNewCustomLogger(log *hwlog.CustomLogger, err error) *gomonkey.Patches {

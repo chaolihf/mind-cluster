@@ -29,8 +29,8 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/limiter"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/limiter"
 )
 
 const (

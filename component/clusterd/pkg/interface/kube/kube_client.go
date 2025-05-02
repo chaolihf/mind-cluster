@@ -16,8 +16,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // CreateConfigMap create configMap here

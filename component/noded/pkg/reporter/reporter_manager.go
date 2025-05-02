@@ -16,10 +16,11 @@
 package reporter
 
 import (
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/reporter/cmreporter"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // PluginReporter reporter plugin interface

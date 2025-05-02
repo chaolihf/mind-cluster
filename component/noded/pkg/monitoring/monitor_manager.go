@@ -19,10 +19,11 @@ import (
 	"context"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring/ipmimonitor"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // PluginMonitor monitor plugin interface

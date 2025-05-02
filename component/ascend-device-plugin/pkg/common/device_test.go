@@ -17,15 +17,16 @@ package common
 
 import (
 	"fmt"
-	"github.com/agiledragon/gomonkey/v2"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
+
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"ascend-common/devmanager/common"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 const (

@@ -10,12 +10,13 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/interface/grpc/fault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 func init() {

@@ -26,10 +26,11 @@ import (
 	"github.com/u-root/u-root/pkg/ipmi"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring/ipmimonitor"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

@@ -30,10 +30,11 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/devmanager"
-	"ascend-common/devmanager/common"
 	"nodeD/pkg/pingmesh/types"
 	_ "nodeD/pkg/testtool"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Patches {

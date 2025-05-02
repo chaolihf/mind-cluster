@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"syscall"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/config"
 	"nodeD/pkg/control"
@@ -30,6 +29,8 @@ import (
 	"nodeD/pkg/monitoring"
 	"nodeD/pkg/pingmesh"
 	"nodeD/pkg/reporter"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

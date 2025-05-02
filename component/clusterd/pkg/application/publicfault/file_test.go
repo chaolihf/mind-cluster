@@ -10,8 +10,9 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/common-utils/utils"
 	"clusterd/pkg/domain/publicfault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 var (

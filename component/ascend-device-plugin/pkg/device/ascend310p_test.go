@@ -23,7 +23,8 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/kubeclient"
-	"ascend-common/devmanager"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager"
 )
 
 func createFake310pManager() *HwAscend310PManager {

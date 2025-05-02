@@ -26,10 +26,11 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager"
-	"ascend-common/devmanager/common"
 	"nodeD/pkg/pingmesh/types"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 const (

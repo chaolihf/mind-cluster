@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/application/fault"
 	"clusterd/pkg/application/faultmanager"
@@ -32,6 +31,8 @@ import (
 	"clusterd/pkg/domain/epranktable"
 	sv "clusterd/pkg/interface/grpc"
 	"clusterd/pkg/interface/kube"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

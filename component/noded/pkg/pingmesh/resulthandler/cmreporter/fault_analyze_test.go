@@ -33,11 +33,12 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	clientgotest "k8s.io/client-go/testing"
 
-	"ascend-common/api"
-	"ascend-common/devmanager/common"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/pingmesh/types"
 	_ "nodeD/pkg/testtool"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 func TestFaultReporter_HandlePingMeshInfo(t *testing.T) {

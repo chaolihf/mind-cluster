@@ -18,7 +18,7 @@ package profiling
 import (
 	"encoding/json"
 
-	"ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // MsptiActivityKind The kinds of activity records.

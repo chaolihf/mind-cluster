@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/publicfault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var pubFaultInitOnce sync.Once

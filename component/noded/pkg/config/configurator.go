@@ -27,11 +27,12 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 )
 
 // FaultConfigurator manage dynamically configuration information

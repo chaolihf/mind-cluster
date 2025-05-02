@@ -26,10 +26,11 @@ import (
 	"os"
 	"strconv"
 
-	"ascend-common/api"
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager/common"
 	"nodeD/pkg/pingmesh/types"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 const (

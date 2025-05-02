@@ -32,8 +32,9 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const testNodeName = "test-node-name"

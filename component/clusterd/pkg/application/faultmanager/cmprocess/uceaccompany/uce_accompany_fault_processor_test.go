@@ -13,11 +13,12 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/faultdomain/collector"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // CurrentTime current time of test case

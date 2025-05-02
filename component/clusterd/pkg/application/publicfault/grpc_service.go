@@ -6,9 +6,10 @@ package publicfault
 import (
 	"context"
 
-	"ascend-common/api"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/interface/grpc/pubfault"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 // PubFaultService a service for public fault

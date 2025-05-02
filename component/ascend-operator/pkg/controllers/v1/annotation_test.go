@@ -17,9 +17,10 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
 
-	"ascend-common/api"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	_ "ascend-operator/pkg/testtool"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 // TestSetPodAnnotation is test for setPodAnnotation

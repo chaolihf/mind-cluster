@@ -22,9 +22,10 @@ import (
 	"os"
 	"strings"
 
-	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/hook/process"
 	"ascend-docker-runtime/mindxcheckutils"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

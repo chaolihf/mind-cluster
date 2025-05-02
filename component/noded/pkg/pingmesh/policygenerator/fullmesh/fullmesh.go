@@ -23,9 +23,10 @@ import (
 	"sort"
 	"strings"
 
-	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager/common"
 	"nodeD/pkg/pingmesh/types"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
 
 type generatorImp struct {

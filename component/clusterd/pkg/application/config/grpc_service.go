@@ -22,11 +22,12 @@ import (
 	"sync"
 	"time"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/common"
 	"clusterd/pkg/domain/epranktable"
 	"clusterd/pkg/interface/grpc/config"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 const (

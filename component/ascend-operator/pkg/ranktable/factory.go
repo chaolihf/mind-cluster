@@ -8,12 +8,13 @@ Package ranktable is using for reconcile AscendJob.
 package ranktable
 
 import (
-	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/generator"
 	ranktablev1 "ascend-operator/pkg/ranktable/v1"
 	"ascend-operator/pkg/ranktable/v1dot2"
 	"ascend-operator/pkg/utils"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // NewGenerator create ranktable generator

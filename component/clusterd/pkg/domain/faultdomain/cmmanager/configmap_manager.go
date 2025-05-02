@@ -6,10 +6,11 @@ package cmmanager
 import (
 	"sync"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/faultdomain/collector"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 type ConfigMap[T constant.ConfigMapInterface] struct {

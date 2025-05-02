@@ -6,9 +6,10 @@ package node
 import (
 	"k8s.io/api/core/v1"
 
-	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/node"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 // UpdateNodeInfoCache update node info cache

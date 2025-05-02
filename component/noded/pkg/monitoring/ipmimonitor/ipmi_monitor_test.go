@@ -28,8 +28,9 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/u-root/u-root/pkg/ipmi"
 
-	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 func TestMain(m *testing.M) {

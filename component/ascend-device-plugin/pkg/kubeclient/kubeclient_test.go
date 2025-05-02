@@ -37,7 +37,8 @@ import (
 	"k8s.io/component-helpers/node/util"
 
 	"Ascend-device-plugin/pkg/common"
-	"ascend-common/api"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 // TestNewClientK8s test create k8s client
