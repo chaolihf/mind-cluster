@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	server := http.Server{
+	server := &http.Server{
 		Addr: "127.0.0.1:9100",
 	}
 	npu_exporter.NpuServer(server)

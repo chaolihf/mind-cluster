@@ -103,7 +103,7 @@ const (
 	defaultHccsBwProfilingTime = 200
 )
 
-func NpuServer(server http.Server) {
+func NpuServer(server *http.Server) {
 	flag.Parse()
 	if version {
 		fmt.Printf("NPU-exporter version: %s \n", versions.BuildVersion)
@@ -153,7 +153,7 @@ func NpuServer(server http.Server) {
 	wg.Wait()
 }
 
-func prometheusProcss(server http.Server, wg *sync.WaitGroup, ctx context.Context, cancel context.CancelFunc) {
+func prometheusProcss(server *http.Server, wg *sync.WaitGroup, ctx context.Context, cancel context.CancelFunc) {
 	c := prom.NewPrometheusCollector(colcommon.Collector)
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(c)
@@ -384,7 +384,7 @@ func prometheusProcess() {
 
 }
 
-func startServe(server http.Server, ctx context.Context, cancel context.CancelFunc, reg *prometheus.Registry) {
+func startServe(server *http.Server, ctx context.Context, cancel context.CancelFunc, reg *prometheus.Registry) {
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{ErrorHandling: promhttp.ContinueOnError}))
 	http.Handle("/", http.HandlerFunc(indexHandler))
 	// conf := initConfig()
