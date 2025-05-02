@@ -1,4 +1,4 @@
-module github.com/mind-cluster
+module github.com/chaolihf/mind-cluster
 
 go 1.24.2
 
