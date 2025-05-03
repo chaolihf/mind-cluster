@@ -44,3 +44,7 @@ cd /component/npu-export-library-test
 go build
 export LD_LIBRARY_PATH=.
 ./npumonitor
+
+# 参考文档
+dcmi接口文档
+https://support.huawei.com/enterprise/zh/doc/EDOC1100288472/8e7776d1

@@ -84,6 +84,13 @@ func NpuServer(server *http.Server) {
 			}
 			fmt.Printf("cardID %d, deviceID %d,highBandwidthMemoryInfo %v\n", cardID, deviceID, highBandwidthMemoryInfo)
 
+			devProcessInfo, err := deviceManager.DcGetDevProcessInfo(cardID, int32(deviceID))
+			if err != nil {
+				fmt.Printf("error on get device devProcessInfo id %s\n", err)
+				return
+			}
+			fmt.Printf("cardID %d, deviceID %d,devProcessInfo %v\n", cardID, deviceID, devProcessInfo)
+
 			memoryInfo, err := deviceManager.DcGetMemoryInfo(cardID, int32(deviceID))
 			if err != nil {
 				fmt.Printf("error on get device memory id %s\n", err)
