@@ -18,17 +18,25 @@ package devmanager
 import (
 	"errors"
 
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
+
+var _ DeviceInterface = &DeviceManager910A3MockErr{}
 
 // DeviceManager910A3MockErr common device manager mock error for Ascend910A3
 type DeviceManager910A3MockErr struct {
 	DeviceManagerMockErr
 }
 
+// WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
+func (d *DeviceManager910A3MockErr) WaitDeviceOnline(resetTimeout int) {
+
+}
+
 // GetDevType return mock type
 func (d *DeviceManager910A3MockErr) GetDevType() string {
-	return common.Ascend910A3
+	return api.Ascend910A3
 }
 
 // GetHccsStatisticInfo get hccs statistic info

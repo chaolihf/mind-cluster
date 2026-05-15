@@ -18,7 +18,8 @@ limitations under the License.
 package batch
 
 import (
-	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/client/informers/externalversions/batch/v1"
+	v1 "github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/client/informers/externalversions/batch/v1"
+
 	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/client/informers/externalversions/internalinterfaces"
 )
 

@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	v1 "github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
 	"context"
 	"errors"
 	"time"
@@ -26,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 
-	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/client/clientset/versioned/scheme"
 )
 
@@ -68,7 +69,7 @@ func (j *jobs) Create(ctx context.Context, job *v1.AscendJob, opts metav1.Create
 	result := &v1.AscendJob{}
 	err := j.client.Post().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(job).
 		Do(ctx).
@@ -78,13 +79,13 @@ func (j *jobs) Create(ctx context.Context, job *v1.AscendJob, opts metav1.Create
 
 func (j *jobs) Update(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob,
 	error) {
-	if j == nil {
+	if j == nil || job == nil {
 		return nil, errors.New(nilPointError)
 	}
 	result := &v1.AscendJob{}
 	err := j.client.Put().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		Name(job.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(job).
@@ -95,13 +96,13 @@ func (j *jobs) Update(ctx context.Context, job *v1.AscendJob, opts metav1.Update
 
 func (j *jobs) UpdateStatus(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions) (*v1.AscendJob,
 	error) {
-	if j == nil {
+	if j == nil || job == nil {
 		return nil, errors.New(nilPointError)
 	}
 	result := &v1.AscendJob{}
 	err := j.client.Put().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		Name(job.Name).
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -117,7 +118,7 @@ func (j *jobs) Delete(ctx context.Context, name string, opts metav1.DeleteOption
 	}
 	return j.client.Delete().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -134,7 +135,7 @@ func (j *jobs) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, 
 	}
 	return j.client.Delete().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -149,7 +150,7 @@ func (j *jobs) Get(ctx context.Context, name string, opts metav1.GetOptions) (*v
 	result := &v1.AscendJob{}
 	err := j.client.Get().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		Name(name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do(ctx).
@@ -168,7 +169,7 @@ func (j *jobs) List(ctx context.Context, opts metav1.ListOptions) (*v1.AscendJob
 	result := &v1.AscendJobList{}
 	err := j.client.Get().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -187,7 +188,7 @@ func (j *jobs) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interf
 	opts.Watch = true
 	return j.client.Get().
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
@@ -201,7 +202,7 @@ func (j *jobs) Patch(ctx context.Context, name string, pt types.PatchType, data 
 	result := &v1.AscendJob{}
 	err := j.client.Patch(pt).
 		Namespace(j.ns).
-		Resource("ascendjobs").
+		Resource(api.AscendJobsLowerCase).
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).

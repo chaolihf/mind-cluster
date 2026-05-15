@@ -24,22 +24,22 @@ type VDevMngSubCmd uint32
 // DieType present chip die type
 type DieType int32
 
+// DiePolicyType die policy type
+type DiePolicyType uint32
+
 const (
-	// dcmiMaxVdevNum is max number of vdevice, value is from driver specification
-	dcmiMaxVdevNum = 32
-	// dcmiMaxReserveNum is max number of reserve, value is from driver specification
-	dcmiMaxReserveNum = 8
-	// dcmiVDevResNameLen length of vnpu resource name
-	dcmiVDevResNameLen = 16
+	// DcmiMaxVdevNum is max number of vdevice, value is from driver specification
+	DcmiMaxVdevNum = 32
+	// DcmiMaxReserveNum is max number of reserve, value is from driver specification
+	DcmiMaxReserveNum = 8
+	// DcmiVDevResNameLen length of vnpu resource name
+	DcmiVDevResNameLen = 16
 	// dcmiHccsMaxPcsNum max pcs number for hccs
 	dcmiHccsMaxPcsNum = 16
 
-	maxChipNameLen = 32
+	MaxChipNameLen = 32
 	productTypeLen = 64
-	dcmiVersionLen = 32
-
-	// vDeviceCreateTemplateNamePrefix prefix of vnpu template name
-	vDeviceCreateTemplateNamePrefix = "vir"
+	DcmiVersionLen = 32
 
 	// MainCmdChipInf main cmd chip inf
 	MainCmdChipInf MainCmd = 12
@@ -64,6 +64,8 @@ const (
 	SioSubCmdCrcErrStatistics VDevMngSubCmd = 0
 	// HccsSubCmdGetStatisticInfo get statistic info
 	HccsSubCmdGetStatisticInfo VDevMngSubCmd = 3
+	// HccsSubCmdGetStatisticInfoU64 get statistic info in u64
+	HccsSubCmdGetStatisticInfoU64 VDevMngSubCmd = 5
 
 	// NDIE NDie ID, only Ascend910 has
 	NDIE DieType = 0
@@ -72,8 +74,14 @@ const (
 	// DieIDCount die id array max length
 	DieIDCount = 5
 
-	// ipAddrTypeV6 ip address type of IPv6
-	ipAddrTypeV6 = 1
+	// IpAddrTypeV6 ip address type of IPv6
+	IpAddrTypeV6 = 1
+	// HexBase hex base number
+	HexBase             = 16
+	AgentdrvProfDataNum = 3
 
-	agentdrvProfDataNum = 3
+	// MultiDieUnion A3 multi-die must be supplied into the container simultaneously
+	MultiDieUnion DiePolicyType = 0
+	// MultiDieIndep A3 supports single-die independent injection into the container
+	MultiDieIndep DiePolicyType = 1
 )

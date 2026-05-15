@@ -27,6 +27,8 @@ extern "C" {
 #define TEMPLATE_NAME_LEN 32
 #define DIE_ID_COUNT 5  // Number of die ID characters
 #define AGENTDRV_PROF_DATA_NUM 3
+#define MAX_LENGTH 256  // Maximum length for elabel info fields
+#define DCMI_UTIL_RESERVED_LEN 8
 
 /*----------------------------------------------*
  * Structure description                        *
@@ -70,6 +72,8 @@ struct dcmi_ecc_info {
     unsigned int total_double_bit_error_cnt;
     unsigned int single_bit_isolated_pages_cnt;
     unsigned int double_bit_isolated_pages_cnt;
+    unsigned int single_bit_next_isolated_pages_cnt;
+    unsigned int double_bit_next_isolated_pages_cnt;
 };
 
 struct dcmi_hbm_info {
@@ -185,6 +189,12 @@ enum dcmi_die_type {
     VDIE
 };
 
+enum dcmi_multi_die_policy {
+    DCMI_MULTI_DIE_UNION_POLICY = 0, // A3 multi-die must be supplied into the container simultaneously
+    DCMI_MULTI_DIE_INDEP_POLICY = 1, // A3 supports single-die independent injection into the container
+    DCMI_MULTI_DIE_POLICY_MAX = 2
+};
+
 #define DCMI_VDEV_RES_NAME_LEN 16
 #define DCMI_VDEV_SIZE 20
 #define DCMI_VDEV_FOR_RESERVE 32
@@ -293,6 +303,40 @@ struct dcmi_vdev_query_stru {
     struct dcmi_vdev_query_info query_info;
 };
 
+// ub ping mesh for A5 -- start
+#define UB_PING_MESH_MAX_NUM 48
+#define UB_ADDR_MAX_LEN 16
+#define UB_DST_EIT_MAX_LEN 64
+
+struct dcmi_ub_ping_mesh_operate {
+    char src_eid[UB_ADDR_MAX_LEN];
+    char dst_eid_list[UB_DST_EIT_MAX_LEN][UB_ADDR_MAX_LEN];
+    int dst_num;
+    int pkt_size;
+    int pkt_send_num;
+    int pkt_interval;
+    int timeout;
+    int task_interval;
+    int task_id;
+};
+
+struct dcmi_ub_ping_mesh_info {
+    char src_eid[UB_ADDR_MAX_LEN];
+    char dst_eid_list[UB_DST_EIT_MAX_LEN][UB_ADDR_MAX_LEN];
+    unsigned int suc_pkt_num[UB_PING_MESH_MAX_NUM];
+    unsigned int fail_pkt_num[UB_PING_MESH_MAX_NUM];
+    long max_time[UB_PING_MESH_MAX_NUM];
+    long min_time[UB_PING_MESH_MAX_NUM];
+    long avg_time[UB_PING_MESH_MAX_NUM];
+    long tp95_time[UB_PING_MESH_MAX_NUM];
+    int reply_stat_num[UB_PING_MESH_MAX_NUM];
+    unsigned long long ping_total_num[UB_PING_MESH_MAX_NUM];
+    int dest_num;
+    unsigned long occur_time; // unit is ms
+};
+
+// ub ping mesh for A5 -- end
+
 struct dcmi_soc_free_resource {
     unsigned int vfg_num;
     unsigned int vfg_bitmap;
@@ -316,7 +360,11 @@ struct dcmi_spod_info {
     unsigned int scale_type;
     unsigned int super_pod_id;
     unsigned int server_id;
-    unsigned int reserve[8];
+    /* chassis_id for A5 */
+    unsigned int chassis_id;
+    /* super_pod_type for A5 */
+    unsigned char super_pod_type;
+    unsigned char reserve[27];
 };
 
 struct dcmi_dms_fault_event {
@@ -392,6 +440,15 @@ struct dcmi_hccs_statistic_info {
     unsigned int retry_cnt[HCCS_MAX_PCS_NUM];
     unsigned int reserved_field_cnt[HCCS_RES_PCS_NUM];
 };
+
+struct dcmi_hccs_statistic_info_u64 {
+    unsigned long long tx_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long rx_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long crc_err_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long retry_cnt[HCCS_MAX_PCS_NUM];
+    unsigned long long reserved[HCCS_RES_PCS_NUM];
+};
+
 struct dcmi_hccs_bandwidth_info {
     int profiling_time;
     double total_txbw;
@@ -404,6 +461,14 @@ struct dcmi_sio_crc_err_statistic_info {
     unsigned short tx_error_count;
     unsigned short rx_error_count;
     unsigned char reserved[8];
+};
+
+struct dcmi_elabel_info {
+    char product_name[MAX_LENGTH];
+    char model[MAX_LENGTH];
+    char manufacturer[MAX_LENGTH];
+    char manufacturer_date[MAX_LENGTH];
+    char serial_number[MAX_LENGTH];
 };
 
 struct dcmi_hccsping_mesh_operate {
@@ -428,6 +493,39 @@ struct dcmi_hccsping_mesh_info {
     unsigned long long ping_total_num[HCCS_PING_MESH_MAX_NUM];
     int dest_num;
 };
+
+struct dcmi_multi_utilization_info {
+    unsigned int aic_util;
+    unsigned int aiv_util;
+    unsigned int aicore_util;
+    unsigned int npu_util;
+    unsigned int reserved[DCMI_UTIL_RESERVED_LEN];
+};
+
+// urma device API for A5 -- begin
+// A5 Unifiy BUS
+#define DCMI_URMA_EID_MAX_COUNT (32)      // 32 EID
+#define DCMI_URMA_EID_SIZE      (16)      // 16byte 128bit
+
+typedef union dcmi_urma_eid {
+    unsigned char raw[DCMI_URMA_EID_SIZE];
+    struct {
+        unsigned long reserved; /* if IPv4 mapped to IPv6, == 0 */
+        unsigned int prefix;    /* if IPv4 mapped to IPv6, == 0x0000ffff */
+        unsigned int addr;      /* if IPv4 mapped to IPv6, == IPv4 addr */
+    } in4;
+    struct {
+        unsigned long subnet_prefix;
+        unsigned long interface_id;
+    } in6;
+} dcmi_urma_eid_t;
+
+typedef struct dcmi_urma_eid_info {
+    dcmi_urma_eid_t eid;
+    unsigned int eid_index;
+} dcmi_urma_eid_info_t;
+
+// urma device API for A5 -- end
 
 #define DCMI_VERSION_1
 #define DCMI_VERSION_2
@@ -474,6 +572,9 @@ DCMIDLLEXPORT int dcmi_get_device_memory_info_v3(int card_id, int device_id,
 
 DCMIDLLEXPORT int dcmi_get_device_utilization_rate(
     int card_id, int device_id, int input_type, unsigned int *utilization_rate);
+
+DCMIDLLEXPORT int dcmi_get_device_multi_utilization_rate(
+    int card_id, int device_id, struct dcmi_multi_utilization_info *util_info);
 
 DCMIDLLEXPORT int dcmi_get_device_info(
     int card_id, int device_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd, void *buf, unsigned int *size);
@@ -541,6 +642,33 @@ DCMIDLLEXPORT int dcmi_get_hccsping_mesh_info(int card_id, int device_id, int po
 
 DCMIDLLEXPORT int dcmi_get_hccsping_mesh_state(int card_id, int device_id, int port_id, unsigned int task_id, unsigned int *state);
 
+DCMIDLLEXPORT int dcmi_get_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int *status);
+
+DCMIDLLEXPORT int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status);
+
+DCMIDLLEXPORT int dcmi_get_multi_die_policy(enum dcmi_multi_die_policy *policy);
+
+DCMIDLLEXPORT int dcmi_set_multi_die_policy(enum dcmi_multi_die_policy policy);
+
+// UB Ping Mesh API for A5 -- start
+DCMIDLLEXPORT int dcmi_start_ub_ping_mesh(int card_id, int device_id, int count,
+    struct dcmi_ub_ping_mesh_operate *ubping_mesh);
+
+DCMIDLLEXPORT int dcmi_stop_ub_ping_mesh(int card_id, int device_id, int task_id);
+
+DCMIDLLEXPORT int dcmi_get_ub_ping_mesh_info(int card_id, int device_id, int task_id,
+    struct dcmi_ub_ping_mesh_info *ub_ping_mesh_reply, int mesh_reply_size, int *count);
+
+DCMIDLLEXPORT int dcmi_get_ub_ping_mesh_state(int card_id, int device_id, int task_id, unsigned int *state);
+// UB Ping Mesh API for A5 -- end
+
+// urma device API for A5 -- begin
+DCMIDLLEXPORT int dcmi_get_urma_device_cnt(int card_id, int device_id, unsigned int *dev_cnt);
+
+DCMIDLLEXPORT int dcmi_get_eid_list_by_urma_dev_index(int card_id, int device_id, unsigned int dev_index,
+    dcmi_urma_eid_info_t *eid_list, unsigned int *eid_cnt);
+// urma device API for A5 -- end
+
 #endif
 
 #if defined DCMI_VERSION_1
@@ -559,6 +687,8 @@ DCMIDLLEXPORT int dcmi_get_device_errorcode(
     int card_id, int device_id, int *error_count, unsigned int *error_code, int *error_width);
 
 DCMIDLLEXPORT int dcmi_mcu_get_power_info(int card_id, int *power);
+
+DCMIDLLEXPORT int dcmi_get_card_elabel_v2(int card_id, struct dcmi_elabel_info *elabel_info);
 #endif
 
 #ifdef __cplusplus

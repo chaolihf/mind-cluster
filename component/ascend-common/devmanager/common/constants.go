@@ -38,7 +38,7 @@ var (
 
 	// a3BoardIds for A3 Board IDs
 	a3BoardIds = sets.NewInt32(A900A3SuperPodBin1BoardId, A900A3SuperPodBin2BoardId,
-		A900A3SuperPodBin3BoardId, A800IA3BoardId)
+		A900A3SuperPodBin3BoardId, A800IA3BoardId, A3SuperPodZQBoardId, A3ServerZQBoardId, A3SuperPodZQNpuBoardId, A3ServerZQNpuBoardId)
 
 	// a900A3SuperPodMainBoardIds for A900 A3 Super Pod Main Board IDs
 	a900A3SuperPodMainBoardIds = sets.NewInt32(A900A3SuperPodMainBoardId1, A900A3SuperPodMainBoardId2)
@@ -61,21 +61,11 @@ var (
 
 // DeviceType for frequency
 var (
-	// MemoryFreq Ascend310 & Ascend310P
-	MemoryFreq = DeviceType{Code: 1, Name: "Memory"}
-	// CtrlCpuFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	CtrlCpuFreq = DeviceType{Code: 2, Name: "CtrlCpu"}
-	// HbmFreq Ascend310 & Ascend910 & Ascend910B
-	HbmFreq = DeviceType{Code: 6, Name: "Hbm"}
 	// AICoreCurrentFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
 	AICoreCurrentFreq = DeviceType{Code: 7, Name: "AICore Current"}
-	// AICoreRatedFreq Ascend310 & Ascend910 & Ascend910B & Ascend310P
-	AICoreRatedFreq = DeviceType{Code: 9, Name: "AICore Rated"}
 )
 
 const (
-	// InvalidVal InvalidVal for NPU Invalid value
-	InvalidVal = 0
 	// Success for interface return code
 	Success = 0
 	// DeviceNotReadyErrCodeStr for dcmi interface device not ready err code string
@@ -97,9 +87,6 @@ const (
 	// ChannelStateOk means out band channel is ok for resetting
 	ChannelStateOk = 1
 
-	// DeviceIPLength length of device ip address
-	DeviceIPLength = 4
-
 	// HiAIMaxCardID max card id for Ascend chip
 	HiAIMaxCardID = math.MaxInt32
 
@@ -119,10 +106,6 @@ const (
 	// DefaultTemperatureWhenQueryFailed when get temperature failed, use this value
 	DefaultTemperatureWhenQueryFailed = -275
 
-	// Ascend310 ascend 310 chip
-	Ascend310 = "Ascend310"
-	// Ascend310B ascend 310B chip
-	Ascend310B = "Ascend310B"
 	// Ascend310P ascend 310P chip
 	Ascend310P = "Ascend310P"
 	// Ascend910 ascend 910 chip
@@ -133,9 +116,6 @@ const (
 	Ascend910A3 = "Ascend910A3"
 	// Atlas200ISoc 200 soc env
 	Atlas200ISoc = "Atlas 200I SoC A1"
-
-	// NeverStopTimeout never stop interface timeout
-	NeverStopTimeout = -1
 
 	// DcmiApiTimeout dcmi interface timeout seconds
 	DcmiApiTimeout = 1
@@ -150,9 +130,6 @@ const (
 	// InvalidID invalid ID
 	InvalidID = 0xffffffff
 
-	// NotSupportMetricValue for not support metric value
-	NotSupportMetricValue = 8255
-
 	// FailedMetricValue for failed metric value
 	FailedMetricValue = -1
 
@@ -161,18 +138,14 @@ const (
 
 	// MaxErrorCodeLen max length of error code for Prometheus
 	MaxErrorCodeLen = 10
+
+	// DcmiRetryInterval call dcmi retry interval
+	DcmiRetryInterval = 5
 )
 
 const (
 	// BootStartFinish chip hot reset finish
 	BootStartFinish = 16
-)
-
-const (
-	// Pattern910A regular expression for 910A
-	Pattern910A = `^910`
-	// Pattern910B regular expression for 910B
-	Pattern910B = `^910B\d{1}`
 )
 
 const (
@@ -206,6 +179,9 @@ const (
 	// A300IA2BoardId board id of A300I A2 and 910proB
 	A300IA2BoardId = 0x28
 
+	// A300IA2GB64BoardId board id of A300I A2 64GB
+	A300IA2GB64BoardId = 0x29
+
 	// A900A3SuperPodBin1BoardId board id of A900/A9000 A3 SuperPod Bin1
 	A900A3SuperPodBin1BoardId = 0xb0
 
@@ -232,6 +208,21 @@ const (
 
 	// A9000A3SuperPodMainBoardId2 board id of A9000 A3 SuperPod MainBoard2
 	A9000A3SuperPodMainBoardId2 = 0x1D
+
+	// Atlas200LA2ZQBoardId board id of Atlas 200L A2 ZQ
+	Atlas200LA2ZQBoardId = 0x69
+
+	// A3SuperPodZQBoardId board id of A3 SuperPod ZQ (Zuque SuperPod)
+	A3SuperPodZQBoardId = 0x81
+
+	// A3ServerZQBoardId board id of A3 Server ZQ (Zuque Server)
+	A3ServerZQBoardId = 0x83
+
+	// A3SuperPodZQNpuBoardId is the board ID of A3 SuperPod ZQ (Zuque SuperPod).
+	A3SuperPodZQNpuBoardId = 0xd1
+
+	// A3ServerZQNpuBoardId is the board ID of A3 Server ZQ (Zuque Server).
+	A3ServerZQNpuBoardId = 0xd3
 )
 
 // log limit domains for metrics
@@ -259,6 +250,8 @@ const (
 const (
 	// ErrMsgInitCardListFailed is used where initialization of the card list fails
 	ErrMsgInitCardListFailed = "get card list failed for init"
+	// ErrMsgInitDeviceListFailed is used where initialization of the device list fails
+	ErrMsgInitDeviceListFailed = "get device list failed for init"
 	// ErrMsgGetBoardInfoFailed is used where there is a failure in getting board info
 	ErrMsgGetBoardInfoFailed = "get board info failed, no card found"
 )
@@ -282,7 +275,7 @@ const (
 	MinTaskInterval = 1
 	// MaxTaskInterval is the max task interval
 	MaxTaskInterval = 60
-	// InternalPingMeshTaskID is the inner ping mesh task id
+	// InternalPingMeshTaskID is the inner ping mesh task id; for A5 is the inner super pod task id
 	InternalPingMeshTaskID uint = 0
 	// ExternalPingMeshTaskID is the outer ping mesh task id
 	ExternalPingMeshTaskID uint = 1
@@ -296,4 +289,18 @@ const (
 	DefaultPktInterval = 10
 	// DefaultTimeout is the default timeout
 	DefaultTimeout = 1
+)
+
+const (
+	// TopoLabelSuperPodId topological label for super-pod id
+	TopoLabelSuperPodId = "huawei.com/topotree.superpodid"
+	// TopoLabelRackId topological label for rack id
+	TopoLabelRackId = "huawei.com/topotree.rackid"
+)
+
+const (
+	// NPUNetworkLinkDownStatus indicate the network status of down
+	NPUNetworkLinkDownStatus = "DOWN"
+	// NPUNetworkLinkUpStatus indicate the network status of up
+	NPUNetworkLinkUpStatus = "UP"
 )

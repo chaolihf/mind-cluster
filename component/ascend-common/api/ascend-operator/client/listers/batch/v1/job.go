@@ -19,11 +19,11 @@ package v1
 import (
 	"errors"
 
+	v1 "github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
+
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-
-	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
 )
 
 // JobLister helps list Jobs.

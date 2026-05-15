@@ -18,12 +18,13 @@ package utils
 import (
 	"crypto/sha256"
 	"fmt"
+	"unicode"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 const (
 	maskLen = 2
-	// SplitFlag backup file splitflag
-	SplitFlag = "\n</=--*^^||^^--*=/>"
 )
 
 // ReplacePrefix replace string with prefix
@@ -60,4 +61,30 @@ func ReverseString(s string) string {
 		runes[start], runes[end] = runes[end], runes[start]
 	}
 	return string(runes)
+}
+
+// IsDigitString return string is all digit
+func IsDigitString(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for _, c := range s {
+		if !unicode.IsDigit(c) {
+			return false
+		}
+	}
+	return true
+}
+
+// devTypeMaskMap maps the original devType to the masked devType
+var devTypeMaskMap = map[string]string{
+	api.Ascend910A5: api.VersionNPU,
+}
+
+// MaskDevType masks the devType based on the devTypeMaskMap
+func MaskDevType(devType string) string {
+	if masked, ok := devTypeMaskMap[devType]; ok {
+		return masked
+	}
+	return devType
 }

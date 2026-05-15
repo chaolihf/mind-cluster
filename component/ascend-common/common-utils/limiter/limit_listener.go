@@ -59,14 +59,6 @@ func LimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (
 	return commonLimitListener(l, totalConnLimit, IPConnLimit, cacheSize)
 }
 
-// LargeLimitListener returns a Listener that accepts at most n connections at the same time
-func LargeLimitListener(l net.Listener, totalConnLimit, IPConnLimit, cacheSize int) (net.Listener, error) {
-	if totalConnLimit < 0 || totalConnLimit > largeMaxConnection {
-		return nil, errors.New("the parameter of LargeLimitListener totalConnLimit is illegal")
-	}
-	return commonLimitListener(l, totalConnLimit, IPConnLimit, cacheSize)
-}
-
 type localLimitListener struct {
 	net.Listener
 	buckets     chan struct{}
@@ -152,6 +144,10 @@ type limitListenerConn struct {
 // Close override  net.Conn interface
 func (l *limitListenerConn) Close() error {
 	err := l.Conn.Close()
+	if err != nil {
+		hwlog.RunLog.Debugf("close grpc connect failed: %v", err)
+		return fmt.Errorf("close grpc connect failed: %v", err)
+	}
 	l.releaseOnce.Do(l.release)
 	ip, cacheKey := getIpAndKey(l.Conn)
 	if ip != "" && l.ipCache != nil {

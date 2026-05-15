@@ -17,13 +17,14 @@ limitations under the License.
 package externalversions
 
 import (
+	v1 "github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
 	"errors"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -61,7 +62,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return nil, errors.New("nil pointer")
 	}
 	switch resource {
-	case v1.SchemeGroupVersion.WithResource("ascendjobs"):
+	case v1.SchemeGroupVersion.WithResource(api.AscendJobsLowerCase):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Batch().V1().Jobs().Informer()}, nil
 	default:
 	}

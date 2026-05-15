@@ -16,10 +16,12 @@
 package hwlog
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -47,7 +49,7 @@ const (
 	pathLen               = 2
 	minLogLevel           = -1
 	maxLogLevel           = 3
-	maxEachLineLen        = 2048
+	maxEachLineLen        = 1048576
 	defaultMaxEachLineLen = 256
 )
 
@@ -164,7 +166,7 @@ func validateMaxLineLength(config *LogConfig) error {
 		return nil
 	}
 	if config.MaxLineLength < 0 || config.MaxLineLength > maxEachLineLen {
-		return fmt.Errorf("the max length of each log line should be in the range (0, 1024]")
+		return fmt.Errorf("the max length of each log line should be in the range (0, 1048576]")
 	}
 	return nil
 }
@@ -182,6 +184,9 @@ func validateLogConfigFiled(config *LogConfig) error {
 	}
 	if _, err := utils.CheckPath(config.LogFileName); err != nil && err != os.ErrNotExist {
 		return fmt.Errorf("config log path is not absolute path: %v", err)
+	}
+	if strings.Contains(config.LogFileName, "..") || strings.Contains(config.LogFileName, "./") {
+		return errors.New("log path include invalid char")
 	}
 
 	if err := checkAndCreateLogFile(config.LogFileName); err != nil {

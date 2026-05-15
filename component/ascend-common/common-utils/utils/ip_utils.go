@@ -16,9 +16,17 @@
 package utils
 
 import (
+	"errors"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
+
+	net2 "k8s.io/utils/net"
+)
+
+const (
+	domainReg = "^[a-zA-Z0-9][a-zA-Z0-9.-]{1,256}[a-zA-Z0-9]$"
 )
 
 // ClientIP try to get the clientIP
@@ -42,4 +50,60 @@ func ClientIP(r *http.Request) string {
 		return ip
 	}
 	return ""
+}
+
+// CheckDomain check domain which by regex and blacklist
+func CheckDomain(domain string, forLocalUsage bool) error {
+	matched, err := regexp.MatchString(domainReg, domain)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return errors.New("domain does not match allowed regex")
+	}
+	if !forLocalUsage {
+		return nil
+	}
+	if IsDigitString(domain) {
+		return errors.New("domain can not be all digits")
+	}
+	if strings.Contains(domain, "localhost") {
+		return errors.New("domain can not contain localhost")
+	}
+	return nil
+}
+
+// IsHostValid check if the host is valid
+func IsHostValid(host string) (string, error) {
+	parsedIp := net.ParseIP(host)
+	if parsedIp != nil {
+		err := IsIPValid(parsedIp)
+		if err == nil {
+			if net2.IsIPv6(parsedIp) {
+				return "[" + parsedIp.String() + "]", nil
+			} else {
+				return parsedIp.String(), nil
+			}
+		}
+		return "", err
+
+	}
+	return host, CheckDomain(host, false)
+}
+
+// IsIPValid check ip valid
+func IsIPValid(parsedIp net.IP) error {
+	if parsedIp == nil {
+		return errors.New("parse ip is nil")
+	}
+	if parsedIp.To4() == nil && parsedIp.To16() == nil {
+		return errors.New("not a valid ipv4 or ipv6 ip")
+	}
+	if parsedIp.IsUnspecified() {
+		return errors.New("is all zeros ip")
+	}
+	if parsedIp.IsMulticast() {
+		return errors.New("is multicast ip")
+	}
+	return nil
 }

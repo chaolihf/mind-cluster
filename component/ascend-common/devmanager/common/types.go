@@ -172,7 +172,11 @@ type CgoSuperPodInfo struct {
 	ScaleType  uint32
 	SuperPodId uint32
 	ServerId   uint32
-	Reserve    []uint32
+	// RackId for A5
+	RackId uint32
+	// SuperPodType for A5
+	SuperPodType uint8
+	Reserve      []uint8
 }
 
 // VirtualDevInfo virtual device infos
@@ -187,6 +191,10 @@ type VirtualDevInfo struct {
 type DevFaultInfo struct {
 	EventID         int64
 	LogicID         int32
+	ModuleType      int8 // ModuleType prototype is dcmi node_type
+	ModuleID        int8 // ModuleID prototype is dcmi node_id
+	SubModuleType   int8 // SubModuleType prototype is dcmi sub_node_type
+	SubModuleID     int8 // SubModuleID prototype is dcmi sub_node_id
 	Severity        int8
 	Assertion       int8
 	AlarmRaisedTime int64
@@ -283,11 +291,11 @@ type BandwidthInfo struct {
 
 // HccsStatisticInfo contains hccs statistic info
 type HccsStatisticInfo struct {
-	TxCnt            []uint32
-	RxCnt            []uint32
-	CrcErrCnt        []uint32
-	retryCnt         []uint32
-	reservedFieldCnt []uint32
+	TxCnt            []uint64
+	RxCnt            []uint64
+	CrcErrCnt        []uint64
+	retryCnt         []uint64
+	reservedFieldCnt []uint64
 }
 
 // HccsBandwidthInfo contains hccs bandwidth info
@@ -405,6 +413,9 @@ type HccspingMeshOperate struct {
 	Timeout      int
 	TaskInterval int
 	TaskId       int
+
+	// UB compressed attributes (multi-SrcEID support) for A5
+	UBPingMeshOperateList []UBPingMeshOperate
 }
 
 // HccspingMeshInfo refers to the result of hccsping mesh
@@ -419,4 +430,108 @@ type HccspingMeshInfo struct {
 	ReplyStatNum []int
 	PingTotalNum []int
 	DestNum      int
+
+	// UB compressed attributes (multi-SrcEID support) for A5
+	UBPingMeshInfoList []UBPingMeshInfo
+}
+
+// ElabelInfo elabel information structure
+type ElabelInfo struct {
+	ProductName      string
+	Model            string
+	Manufacturer     string
+	ManufacturerDate string
+	SerialNumber     string
+}
+
+// DcmiMultiUtilizationInfo npu multi utilization info
+type DcmiMultiUtilizationInfo struct {
+	AicUtil    uint32
+	AivUtil    uint32
+	AicoreUtil uint32
+	NpuUtil    uint32
+}
+
+// UBInfo ub information structure
+type UBInfo struct {
+	UBCommonStats  *UBCommonStats
+	UboeExtensions *UBOEExtensions
+}
+
+// UBOEExtensions represents the UBOE-specific extension statistics for UB
+type UBOEExtensions struct {
+	CoreMibRxPausePkts int
+	CoreMibTxPausePkts int
+	CoreMibRxPfcPkts   int
+	CoreMibTxPfcPkts   int
+	CoreMibRxBadPkts   int
+	CoreMibTxBadPkts   int
+	CoreMibRxBadOctets int
+	CoreMibTxBadOctets int
+}
+
+// UBCommonStats represents the common statistics for the Unified Bus (UB)
+type UBCommonStats struct {
+	UbIpv4PktCntRx    int
+	UbIpv6PktCntRx    int
+	UnicIpv4PktCntRx  int
+	UnicIpv6PktCntRx  int
+	UbCompactPktCntRx int
+	UbUmocCtphCntRx   int
+	UbUmocNtphCntRx   int
+	UbMemPktCntRx     int
+	UnknownPktCntRx   int
+	DropIndCntRx      int
+	ErrIndCntRx       int
+	ToHostPktCntRx    int
+	ToImpPktCntRx     int
+	ToMarPktCntRx     int
+	ToLinkPktCntRx    int
+	ToNocPktCntRx     int
+	RouteErrCntRx     int
+	OutErrCntRx       int
+	LengthErrCntRx    int
+	RxBusiFlitNum     int
+	RxSendAckFlit     int
+	UbIpv4PktCntTx    int
+	UbIpv6PktCntTx    int
+	UnicIpv4PktCntTx  int
+	UnicIpv6PktCntTx  int
+	UbCompactPktCntTx int
+	UbUmocCtphCntTx   int
+	UbUmocNtphCntTx   int
+	UbMemPktCntTx     int
+	UnknownPktCntTx   int
+	DropIndCntTx      int
+	ErrIndCntTx       int
+	LpbkIndCntTx      int
+	OutErrCntTx       int
+	LengthErrCntTx    int
+	TxBusiFlitNum     int
+	TxRecvAckFlit     int
+	RetryReqSum       int
+	RetryAckSum       int
+	CrcErrorSum       int
+}
+
+// OpticalNpuInfo optical info of npu
+type OpticalNpuInfo struct {
+	// Optical module index
+	OpticalIndex int
+	// Power sent by No.0 optical module
+	OpticalTxPower0 float64
+	// Power sent by No.1 optical module
+	OpticalTxPower1 float64
+	// Power sent by No.2 optical module
+	OpticalTxPower2 float64
+	// Power sent by No.3 optical module
+	OpticalTxPower3 float64
+	// Reception power of No.0 optical module
+	OpticalRxPower0 float64
+	// Reception power of No.1 optical module
+	OpticalRxPower1 float64
+	// Reception power of No.2 optical module
+	OpticalRxPower2 float64
+	// Reception power of No.3 optical module
+	OpticalRxPower3 float64
 }

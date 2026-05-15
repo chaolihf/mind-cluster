@@ -18,10 +18,14 @@ package devmanager
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/dcmi"
 )
@@ -31,7 +35,7 @@ type DeviceInterface interface {
 	Init() error
 	ShutDown() error
 	GetDcmiVersion() string
-	GetDeviceCount() (int32, error)
+	GetAllDeviceCount() (int32, error)
 	GetCardList() (int32, []int32, error)
 	GetDeviceNumInCard(cardID int32) (int32, error)
 	GetDeviceList() (int32, []int32, error)
@@ -39,6 +43,7 @@ type DeviceInterface interface {
 	GetDeviceHealth(logicID int32) (uint32, error)
 	GetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error)
+	GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error)
 	GetDeviceTemperature(logicID int32) (int32, error)
 	GetDeviceVoltage(logicID int32) (float32, error)
 	GetDevicePowerInfo(logicID int32) (float32, error)
@@ -58,23 +63,26 @@ type DeviceInterface interface {
 	DestroyVirtualDevice(logicID int32, vDevID uint32) error
 	GetDevType() string
 	GetProductTypeArray() []string
-	GetProductType(cardID, deviceID int32) (string, error)
+	GetProductType(logicID int32) (string, error)
 	GetAllProductType() ([]string, error)
 	GetNpuWorkMode() string
-	SetDeviceReset(cardID, deviceID int32) error
-	GetBrotherCardID(int32, int32) (int32, error)
-	PreResetSoc(int32, int32) error
-	GetOutBandChannelState(int32, int32) error
-	SetDeviceResetOutBand(int32, int32) error
-	RescanSoc(int32, int32) error
+	SetDeviceReset(logicID int32) error
+	GetBrotherCardID(logicID int32) (int32, error)
+	PreResetSoc(logicID int32) error
+	GetOutBandChannelState(logicID int32) error
+	SetDeviceResetOutBand(logicID int32) error
+	RescanSoc(logicID int32) error
 	GetDeviceBootStatus(logicID int32) (int, error)
 	GetDeviceAllErrorCode(logicID int32) (int32, []int64, error)
+	// GetDeviceAllErrorCodeWithTimeOut get npu device all error code with timeout
+	GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeout time.Duration) (int32, []int64, error)
 	SubscribeDeviceFaultEvent(logicID int32) error
 	SetFaultEventCallFunc(func(common.DevFaultInfo)) error
 	GetDieID(logicID int32, dcmiDieType dcmi.DieType) (string, error)
 	GetDevProcessInfo(logicID int32) (*common.DevProcessInfo, error)
 	GetPCIeBusInfo(logicID int32) (string, error)
 	GetBoardInfo(logicID int32) (common.BoardInfo, error)
+	GetCardElabelV2(cardID int32) (common.ElabelInfo, error)
 	GetPCIEBandwidth(logicID int32, profilingTime int) (common.PCIEBwStat, error)
 	SetIsTrainingCard() error
 	IsTrainingCard() bool
@@ -83,20 +91,45 @@ type DeviceInterface interface {
 	GetSuperPodInfo(int32) (common.CgoSuperPodInfo, error)
 	GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInfo, error)
 	GetHccsStatisticInfo(logicID int32) (*common.HccsStatisticInfo, error)
+	GetHccsStatisticInfoInU64(logicID int32) (*common.HccsStatisticInfo, error)
 	GetMainBoardId() uint32
 	GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error)
 
-	DcStartHccsPingMesh(int32, int32, int, common.HccspingMeshOperate) error
-	DcStopHccsPingMesh(int32, int32, int, uint) error
-	DcGetHccsPingMeshInfo(int32, int32, int, uint) (*common.HccspingMeshInfo, error)
-	DcGetHccsPingMeshState(int32, int32, int, uint) (int, error)
+	StartHccsPingMesh(logicID int32, portID int, operate common.HccspingMeshOperate) error
+	StopHccsPingMesh(logicID int32, portID int, taskID uint) error
+	GetHccsPingMeshInfo(logicID int32, portID int, taskID uint) (*common.HccspingMeshInfo, error)
+	GetHccsPingMeshState(logicID int32, portID int, taskID uint) (int, error)
+	GetSuperPodStatus(int32, uint32) (int, error)
+	SetSuperPodStatus(int32, uint32, uint32) error
+	GetMultiDiePolicy() (dcmi.DiePolicyType, error)
+	SetMultiDiePolicy(dcmi.DiePolicyType) error
+
+	// GetUrmaDeviceCount for A5
+	GetUrmaDeviceCount(int32) (int32, error)
+	// GetUrmaDevEidList for A5
+	GetUrmaDevEidList(int32, int32) (*common.UrmaDeviceInfo, error)
+	// GetUrmaDevEidListAll for A5
+	GetUrmaDevEidListAll(int32) ([]common.UrmaDeviceInfo, error)
+
+	GetValidBoardInfo() (common.BoardInfo, error)
+	// Deprecated: Use SetValidMainBoardInfo in DeviceCommonSetInterface and GetMainBoardId instead
+	GetValidMainBoardInfo() (uint32, error)
+	WaitDeviceOnline(resetTimeout int)
 }
+
+const (
+	// init dcmi interface max retry times
+	maxRetries = 6
+	// init dcmi interface retry delay
+	defaultRetryDelay = 10
+)
 
 var (
 	devManager     *DeviceManager = nil
-	devManagerOnce sync.Once
 	idCache        sync.Map
+	devManagerOnce sync.Once
 )
+var _ DeviceInterface = &DeviceManager{}
 
 // npuIdMapping the mapping between the three IDs
 type npuIdMapping struct {
@@ -105,14 +138,181 @@ type npuIdMapping struct {
 	deviceId int32
 }
 
+// DeviceManager common device manager for Ascend910/310P/310
+type DeviceManager struct {
+	// DcMgr for common dev manager
+	DcMgr dcmi.DcDriverInterface
+	// DevType the value is the same as the device type corresponding to the DcMgr variable.
+	// Options: api.Ascend310,api.Ascend310P,api.Ascend910
+	DevType string
+	// ProductTypes product type in server, multi type will be in 310P mix scene
+	ProductTypes []string
+	// isTrainingCard whether the device is used for training
+	isTrainingCard bool
+	dcmiVersion    string
+	// dcmiApiVersion dcmi interface api version, v1 or empty for dcmi_xxx, v2 for dcmiv2_xxx api
+	dcmiApiVersion string
+	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
+	mainBoardId uint32
+}
+
+type deviceCommonInitManager struct {
+	DeviceManager
+}
+
+// SetDcmiVersion set dcmi version
+func (d *deviceCommonInitManager) SetDcmiVersion() {
+	dcmiVersion, err := d.DcMgr.DcGetDcmiVersion()
+	if err != nil {
+		hwlog.RunLog.Warnf("deviceManager get dcmi version failed, err: %v", err)
+	}
+	d.dcmiVersion = dcmiVersion
+}
+
+func (d *deviceCommonInitManager) GetDcmiApiVersion() string {
+	return d.dcmiApiVersion
+}
+
+// SetValidMainBoardInfo get valid main board info
+func (d *deviceCommonInitManager) SetValidMainBoardInfo() error {
+	// get card list
+	cardNum, cardList, err := d.DcMgr.DcGetCardList()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf(common.ErrMsgInitCardListFailed)
+	}
+	if cardNum == 0 {
+		return fmt.Errorf(common.ErrMsgGetBoardInfoFailed)
+	}
+	// get device in card, then get board info by cardID and deviceID
+	for _, cardID := range cardList {
+		devNum, err := d.DcMgr.DcGetDeviceNumInCard(cardID)
+		if err != nil || devNum == 0 {
+			hwlog.RunLog.Debugf("get device num by cardID %d failed, error is: %v", cardID, err)
+			continue
+		}
+		for devID := int32(0); devID < devNum; devID++ {
+			mainBoardId, err := d.DcMgr.DcGetDeviceMainBoardInfo(cardID, devID)
+			if err != nil {
+				hwlog.RunLog.Debug(err)
+				continue
+			}
+			if !common.IsValidMainBoardInfo(mainBoardId) {
+				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID,
+					err)
+				continue
+			}
+			d.mainBoardId = mainBoardId
+			return nil
+		}
+	}
+	return errors.New("cannot get main board id")
+}
+
+// SetDcManger set DcManager
+func (d *deviceCommonInitManager) SetDcManger(dcMgr interface{}) error {
+	dcMgrV1, ok := dcMgr.(dcmi.DcDriverInterface)
+	if !ok {
+		return fmt.Errorf("DcManger type is %T, need dcmi.DcDriverInterface", dcMgr)
+	}
+	d.DcMgr = dcMgrV1
+	return nil
+}
+
+// getDcManager get DcManager
+func (d *deviceCommonInitManager) GetDcManager() DeviceInterface {
+	return &d.DeviceManager
+}
+
+// SetDevType set device type
+func (d *deviceCommonInitManager) SetDevType(devType string) {
+	d.DevType = devType
+}
+
+// SetAllProductType get all product type
+func (d *deviceCommonInitManager) SetAllProductType() error {
+	productTypes := make([]string, 0)
+	cardNum, cardList, err := d.GetCardList()
+	if err != nil || cardNum == 0 {
+		hwlog.RunLog.Errorf("failed to get card list, err: %v", err)
+		d.ProductTypes = productTypes
+		return err
+	}
+	for _, cardID := range cardList {
+		devNum, err := d.GetDeviceNumInCard(cardID)
+		if err != nil {
+			hwlog.RunLog.Debugf("get device num by cardID(%d) failed, error: %v", cardID, err)
+			continue
+		}
+		if devNum == 0 {
+			hwlog.RunLog.Debugf("not found device on card %d", cardID)
+			continue
+		}
+		for devID := int32(0); devID < devNum; devID++ {
+			devLogicId, err := d.GetDeviceLogicID(cardID, devID)
+			if err != nil {
+				hwlog.RunLog.Debugf("get device logic id by card %d deviceID %d failed, err: %v", cardID, devID,
+					err)
+				continue
+			}
+			productType, err := d.GetProductType(devLogicId)
+			if err != nil {
+				hwlog.RunLog.Debugf("get product type by card %d deviceID %d failed, err: %v", cardID, devID, err)
+				continue
+			}
+			productTypes = append(productTypes, productType)
+			break
+		}
+	}
+	if len(productTypes) != 0 {
+		productTypes = common.RemoveDuplicate(&productTypes)
+	}
+
+	for _, product := range productTypes {
+		if product == api.Atlas300IDuo {
+			isContainAtlas300IDuo = true
+		}
+	}
+	d.ProductTypes = productTypes
+	return nil
+}
+
 // GetDeviceManager singleton to init global device manager and init dcmi interface
-func GetDeviceManager() (*DeviceManager, error) {
+func GetDeviceManager(resetTimeout int) (*DeviceManager, error) {
 	devManagerOnce.Do(func() {
 		// a common dcmi Manager is initiated for init dcmi interface, you can specify an specific manager in later
 		dcMgr := dcmi.DcManager{}
-		if err := dcMgr.DcInit(); err != nil {
-			hwlog.RunLog.Errorf("deviceManager init failed, prepare dcmi failed, err: %v", err)
-			return
+		var retryDelay time.Duration = defaultRetryDelay
+		hwlog.RunLog.Infof("get card list from dcmi reset timeout is %d", resetTimeout)
+		for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += int(retryDelay) {
+			if err := dcMgr.DcInit(); err != nil {
+				hwlog.RunLog.Errorf("deviceManager init failed, prepare dcmi failed, err: %v", err)
+				return
+			}
+			cardNum, cardList, err := dcMgr.DcGetCardList()
+			if err == nil && int(cardNum) == len(cardList) {
+				hwlog.RunLog.Infof("deviceManager get cardList is %v, cardList length equal to cardNum: %v",
+					cardList, cardNum)
+				break
+			}
+			if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {
+				retryDelay = time.Duration(math.Min(float64(defaultRetryDelay), diffTime))
+			}
+			retryCount++
+			hwlog.RunLog.Warnf("deviceManager get card list failed (attempt %d), cardNum=%d, cardList=%v, "+
+				"err: %v", retryCount, cardNum, cardList, err)
+			if currentTime+int(retryDelay) <= resetTimeout {
+				if err = dcMgr.DcShutDown(); err != nil {
+					hwlog.RunLog.Errorf("deviceManager shut down failed, err: %v", err)
+					return
+				}
+				time.Sleep(retryDelay * time.Second)
+				continue
+			}
+			if int(cardNum) != len(cardList) {
+				hwlog.RunLog.Warnf("deviceManager get cardList is %v, but cardNum is %v, "+
+					"please check whether the real number of npu matches the cardList", cardList, cardNum)
+			}
 		}
 		devManager = &DeviceManager{}
 		devManager.DcMgr = &dcMgr
@@ -127,24 +327,49 @@ func GetDeviceManager() (*DeviceManager, error) {
 		return nil, errors.New("device Manager is nil, may encounter an exception during initialization. " +
 			"You can check the system log to confirm")
 	}
-
 	return devManager, nil
 }
 
-// DeviceManager common device manager for Ascend910/310P/310
-type DeviceManager struct {
-	// DcMgr for common dev manager
-	DcMgr dcmi.DcDriverInterface
-	// DevType the value is the same as the device type corresponding to the DcMgr variable.
-	// Options: common.Ascend310,common.Ascend310P,common.Ascend910
-	DevType string
-	// ProductTypes product type in server, multi type will be in 310P mix scene
-	ProductTypes []string
-	// isTrainingCard whether the device is used for training
-	isTrainingCard bool
-	dcmiVersion    string
-	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
-	mainBoardId uint32
+// WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
+func (d *DeviceManager) WaitDeviceOnline(resetTimeout int) {
+	if d == nil {
+		hwlog.RunLog.Error("wait device online failed, mgr is empty")
+		return
+	}
+	devManagerOnce.Do(func() {
+		var retryDelay time.Duration = defaultRetryDelay
+		hwlog.RunLog.Infof("get card list from dcmi reset timeout is %d", resetTimeout)
+		for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += int(retryDelay) {
+			if err := d.Init(); err != nil {
+				hwlog.RunLog.Errorf("deviceManager init failed, prepare dcmi failed, err: %v", err)
+				return
+			}
+			cardNum, cardList, err := d.GetCardList()
+			if err == nil && int(cardNum) == len(cardList) {
+				hwlog.RunLog.Infof("deviceManager get cardList is %v, cardList length equal to cardNum: %v",
+					cardList, cardNum)
+				break
+			}
+			if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {
+				retryDelay = time.Duration(math.Min(float64(defaultRetryDelay), diffTime))
+			}
+			retryCount++
+			hwlog.RunLog.Warnf("deviceManager get card list failed (attempt %d), cardNum=%d, cardList=%v, "+
+				"err: %v", retryCount, cardNum, cardList, err)
+			if currentTime+int(retryDelay) <= resetTimeout {
+				if err = d.ShutDown(); err != nil {
+					hwlog.RunLog.Errorf("deviceManager shut down failed, err: %v", err)
+					return
+				}
+				time.Sleep(retryDelay * time.Second)
+				continue
+			}
+			if int(cardNum) != len(cardList) {
+				hwlog.RunLog.Warnf("deviceManager get cardList is %v, but cardNum is %v, "+
+					"please check whether the real number of npu matches the cardList", cardList, cardNum)
+			}
+		}
+	})
 }
 
 // GetProductTypeArray return product types
@@ -157,76 +382,10 @@ func (d *DeviceManager) GetDevType() string {
 	return d.DevType
 }
 
-// AutoInit auto detect npu chip type and return the corresponding processing object
-func AutoInit(dType string) (*DeviceManager, error) {
-	chipInfo, boardInfo, err := getDeviceInfoForInit()
-	if err != nil {
-		return nil, fmt.Errorf("auto init failed, err: %s", err)
-	}
-	var devMgr *DeviceManager
-	if devMgr, err = GetDeviceManager(); err != nil || devMgr == nil {
-		return nil, err
-	}
-	mainBoardId, err := getValidMainBoardInfo(devMgr.DcMgr)
-	if err != nil {
-		// Non-blocking when the main board ID is not found
-		hwlog.RunLog.Warn(err)
-	}
-	devMgr.mainBoardId = mainBoardId
-	var devType = common.GetDevType(chipInfo.Name, boardInfo.BoardId)
-
-	switch devType {
-	case common.Ascend910, common.Ascend910B, common.Ascend910A3:
-		devMgr.DcMgr = &A910Manager{}
-	case common.Ascend310P:
-		devMgr.DcMgr = &A310PManager{}
-	case common.Ascend310, common.Ascend310B:
-		devMgr.DcMgr = &A310Manager{}
-	default:
-		return nil, fmt.Errorf("unsupport device type (%s)", devType)
-	}
-	hwlog.RunLog.Infof("chipInfoName: %v, devType:%v", chipInfo.Name, devType)
-	if dType != "" && devType != dType {
-		return nil, fmt.Errorf("the value of dType(%s) is inconsistent with the actual chip type(%s)",
-			dType, devType)
-	}
-	devMgr.DevType = devType
-	if err := devMgr.SetIsTrainingCard(); err != nil {
-		hwlog.RunLog.Errorf("auto recognize training card failed, err: %s", err)
-	}
-
-	pTypes, err := devMgr.GetAllProductType()
-	if err != nil {
-		hwlog.RunLog.Debugf("auto init product types failed, err: %s", err)
-	}
-	devMgr.ProductTypes = pTypes
-	return devMgr, nil
-}
-
-func getDeviceInfoForInit() (common.ChipInfo, common.BoardInfo, error) {
-	var mgr *DeviceManager
-	var err error
-	if mgr, err = GetDeviceManager(); err != nil || mgr == nil {
-		return common.ChipInfo{}, common.BoardInfo{}, fmt.Errorf("get chip info failed, err: %v", err)
-	}
-	dcMgr := mgr.DcMgr
-	chipInfo, err := getValidChipInfo(dcMgr)
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return common.ChipInfo{}, common.BoardInfo{}, err
-	}
-	boardInfo, err := getValidBoardInfo(dcMgr)
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return chipInfo, common.BoardInfo{}, err
-	}
-
-	return chipInfo, boardInfo, nil
-}
-
-func getValidChipInfo(dcMgr dcmi.DcDriverInterface) (common.ChipInfo, error) {
+// GetValidChipInfo find a valid chip info from all devices
+func (d *DeviceManager) GetValidChipInfo() (common.ChipInfo, error) {
 	// get card list
-	cardNum, cardList, err := dcMgr.DcGetCardList()
+	cardNum, cardList, err := d.DcMgr.DcGetCardList()
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return common.ChipInfo{}, fmt.Errorf(common.ErrMsgInitCardListFailed)
@@ -236,13 +395,13 @@ func getValidChipInfo(dcMgr dcmi.DcDriverInterface) (common.ChipInfo, error) {
 	}
 	// get device in card, then get chip info by cardID and deviceID
 	for _, cardID := range cardList {
-		devNum, err := dcMgr.DcGetDeviceNumInCard(cardID)
+		devNum, err := d.DcMgr.DcGetDeviceNumInCard(cardID)
 		if err != nil || devNum == 0 {
 			hwlog.RunLog.Debugf("get device num by cardID(%d) failed, error: %v", cardID, err)
 			continue
 		}
 		for devID := int32(0); devID < devNum; devID++ {
-			chipInfo, err := dcMgr.DcGetChipInfo(cardID, devID)
+			chipInfo, err := d.DcMgr.DcGetChipInfo(cardID, devID)
 			if err != nil {
 				hwlog.RunLog.Debugf("get chip info failed by cardID(%d), deviceID(%d), error: %v", cardID, devID,
 					err)
@@ -259,9 +418,45 @@ func getValidChipInfo(dcMgr dcmi.DcDriverInterface) (common.ChipInfo, error) {
 	return common.ChipInfo{}, errors.New("cannot get valid chip info")
 }
 
-func getValidBoardInfo(dcMgr dcmi.DcDriverInterface) (common.BoardInfo, error) {
+// GetValidMainBoardInfo find a valid main board info from all devices
+func (d *DeviceManager) GetValidMainBoardInfo() (uint32, error) {
 	// get card list
-	cardNum, cardList, err := dcMgr.DcGetCardList()
+	cardNum, cardList, err := d.DcMgr.DcGetCardList()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return 0, fmt.Errorf(common.ErrMsgInitCardListFailed)
+	}
+	if cardNum == 0 {
+		return 0, fmt.Errorf(common.ErrMsgGetBoardInfoFailed)
+	}
+	// get device in card, then get board info by cardID and deviceID
+	for _, cardID := range cardList {
+		devNum, err := d.DcMgr.DcGetDeviceNumInCard(cardID)
+		if err != nil || devNum == 0 {
+			hwlog.RunLog.Debugf("get device num by cardID %d failed, error is: %v", cardID, err)
+			continue
+		}
+		for devID := int32(0); devID < devNum; devID++ {
+			mainBoardId, err := d.DcMgr.DcGetDeviceMainBoardInfo(cardID, devID)
+			if err != nil {
+				hwlog.RunLog.Debug(err)
+				continue
+			}
+			if !common.IsValidMainBoardInfo(mainBoardId) {
+				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID,
+					err)
+				continue
+			}
+			return mainBoardId, nil
+		}
+	}
+	return 0, errors.New("cannot get main board id")
+}
+
+// GetValidBoardInfo find a valid board info from all devices
+func (d *DeviceManager) GetValidBoardInfo() (common.BoardInfo, error) {
+	// get card list
+	cardNum, cardList, err := d.DcMgr.DcGetCardList()
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return common.BoardInfo{}, fmt.Errorf(common.ErrMsgInitCardListFailed)
@@ -271,13 +466,13 @@ func getValidBoardInfo(dcMgr dcmi.DcDriverInterface) (common.BoardInfo, error) {
 	}
 	// get device in card, then get board info by cardID and deviceID
 	for _, cardID := range cardList {
-		devNum, err := dcMgr.DcGetDeviceNumInCard(cardID)
+		devNum, err := d.DcMgr.DcGetDeviceNumInCard(cardID)
 		if err != nil || devNum == 0 {
 			hwlog.RunLog.Debugf("get device num by cardID %d failed, error is: %v", cardID, err)
 			continue
 		}
 		for devID := int32(0); devID < devNum; devID++ {
-			boardInfo, err := dcMgr.DcGetDeviceBoardInfo(cardID, devID)
+			boardInfo, err := d.DcMgr.DcGetDeviceBoardInfo(cardID, devID)
 			if err != nil {
 				hwlog.RunLog.Debugf("get board info failed by cardID(%d), deviceID(%d), error: %v", cardID, devID,
 					err)
@@ -293,38 +488,6 @@ func getValidBoardInfo(dcMgr dcmi.DcDriverInterface) (common.BoardInfo, error) {
 	}
 	return common.BoardInfo{}, errors.New("cannot get valid board info")
 }
-func getValidMainBoardInfo(dcMgr dcmi.DcDriverInterface) (uint32, error) {
-	// get card list
-	cardNum, cardList, err := dcMgr.DcGetCardList()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return 0, fmt.Errorf(common.ErrMsgInitCardListFailed)
-	}
-	if cardNum == 0 {
-		return 0, fmt.Errorf(common.ErrMsgGetBoardInfoFailed)
-	}
-	// get device in card, then get board info by cardID and deviceID
-	for _, cardID := range cardList {
-		devNum, err := dcMgr.DcGetDeviceNumInCard(cardID)
-		if err != nil || devNum == 0 {
-			hwlog.RunLog.Debugf("get device num by cardID %d failed, error is: %v", cardID, err)
-			continue
-		}
-		for devID := int32(0); devID < devNum; devID++ {
-			mainBoardId, err := dcMgr.DcGetDeviceMainBoardInfo(cardID, devID)
-			if err != nil {
-				hwlog.RunLog.Debug(err)
-				continue
-			}
-			if !common.IsValidMainBoardInfo(mainBoardId) {
-				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID, err)
-				continue
-			}
-			return mainBoardId, nil
-		}
-	}
-	return 0, errors.New("cannot get main board id")
-}
 
 // Init load symbol and initialize dcmi
 func (d *DeviceManager) Init() error {
@@ -337,8 +500,8 @@ func (d *DeviceManager) ShutDown() error {
 }
 
 // GetDeviceCount get npu device count
-func (d *DeviceManager) GetDeviceCount() (int32, error) {
-	return d.DcMgr.DcGetDeviceCount()
+func (d *DeviceManager) GetAllDeviceCount() (int32, error) {
+	return d.DcMgr.DcGetAllDeviceCount()
 }
 
 // GetCardList  get all card list
@@ -401,6 +564,22 @@ func (d *DeviceManager) GetDeviceUtilizationRate(logicID int32, deviceType commo
 	}
 
 	return uint32(rate), nil
+}
+
+// GetDeviceUtilizationRateV2 get npu device utilization v2
+func (d *DeviceManager) GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("failed to get multi utilization by logicID(%d)",
+			logicID)
+	}
+	res, err := d.DcMgr.DcGetDeviceUtilizationRateV2(cardID, deviceID)
+	if err != nil {
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), err
+	}
+
+	return res, nil
 }
 
 // GetDeviceTemperature get npu device temperature
@@ -475,9 +654,10 @@ func (d *DeviceManager) GetDeviceMemoryInfo(logicID int32) (*common.MemoryInfo, 
 		return nil, fmt.Errorf("failed to get memory info by logicID(%d)", logicID)
 	}
 
-	// 910B and 910A3 don't have DDR module. Therefore, DDR information cannot be queried.
-	if d.DevType == common.Ascend910B || d.DevType == common.Ascend910A3 {
-		hwlog.RunLog.Debugf("%v doesn't have DDR module. Therefore, DDR information cannot be queried", d.DevType)
+	// 910B and 910A3 and 910A5 don't have DDR module. Therefore, DDR information cannot be queried.
+	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 || d.DevType == api.Ascend910A5 {
+		hwlog.RunLog.Debugf("%s doesn't have DDR module. Therefore, DDR information cannot be queried",
+			utils.MaskDevType(d.DevType))
 		return nil, nil
 	}
 
@@ -576,8 +756,8 @@ func (d *DeviceManager) GetDeviceIPAddress(logicID, ipType int32) (string, error
 }
 
 // CreateVirtualDevice create virtual device
-func (d *DeviceManager) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+func (d *DeviceManager) CreateVirtualDevice(
+	logicID int32, vDevInfo common.CgoCreateVDevRes) (common.CgoCreateVDevOut, error) {
 	if !common.IsValidTemplateName(d.DevType, vDevInfo.TemplateName) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid template name: %s", vDevInfo.TemplateName)
 	}
@@ -617,48 +797,31 @@ func (d *DeviceManager) GetCardIDDeviceID(logicID int32) (int32, int32, error) {
 }
 
 // GetProductType get product type by cardID and deviceID
-func (d *DeviceManager) GetProductType(cardID, deviceID int32) (string, error) {
+func (d *DeviceManager) GetProductType(logicID int32) (string, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return "", fmt.Errorf("input invalid logicID: %d", logicID)
+	}
+
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
+			"when get product type, error: %v", logicID, err)
+	}
 	return d.DcMgr.DcGetProductType(cardID, deviceID)
 }
 
 // GetAllProductType get all product type
 func (d *DeviceManager) GetAllProductType() ([]string, error) {
-	productTypes := make([]string, 0)
-	cardNum, cardList, err := d.GetCardList()
-	if err != nil || cardNum == 0 {
-		hwlog.RunLog.Errorf("failed to get card list, err: %v", err)
-		return productTypes, err
+	if d == nil {
+		return []string{}, errors.New("nil DeviceManager")
 	}
-	for _, cardID := range cardList {
-		devNum, err := d.GetDeviceNumInCard(cardID)
-		if err != nil {
-			hwlog.RunLog.Debugf("get device num by cardID(%d) failed, error: %v", cardID, err)
-			continue
-		}
-		if devNum == 0 {
-			hwlog.RunLog.Debugf("not found device on card %d", cardID)
-			continue
-		}
-		for devID := int32(0); devID < devNum; devID++ {
-			productType, err := d.GetProductType(cardID, devID)
-			if err != nil {
-				hwlog.RunLog.Debugf("get product type by card %d deviceID %d failed, err: %v", cardID, devID, err)
-				continue
-			}
-			productTypes = append(productTypes, productType)
-			break
-		}
-	}
-	if len(productTypes) != 0 {
-		productTypes = common.RemoveDuplicate(&productTypes)
-	}
-	return productTypes, nil
+	return d.ProductTypes, nil
 }
 
 // GetNpuWorkMode get work mode of NPU
 func (d *DeviceManager) GetNpuWorkMode() string {
-	if d.DevType == common.Ascend910B || d.DevType == common.Ascend910A3 {
-		hwlog.RunLog.Warnf("only AMP mode is available on %s", d.DevType)
+	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 || d.DevType == api.Ascend910A5 {
+		hwlog.RunLog.Warnf("only AMP mode is available on %s", utils.MaskDevType(d.DevType))
 		return common.AMPMode
 	}
 
@@ -682,32 +845,68 @@ func (d *DeviceManager) GetNpuWorkMode() string {
 }
 
 // SetDeviceReset reset spec device
-func (d *DeviceManager) SetDeviceReset(cardID, deviceID int32) error {
+func (d *DeviceManager) SetDeviceReset(logicID int32) error {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf("failed to get cardID in set device reset by logicID(%d)", logicID)
+	}
+
+	if isContainAtlas300IDuo {
+		hwlog.RunLog.Infof("isContainAtlas300IDuo is true, cardID(%d) and deviceID(%d)", cardID, deviceID)
+		deviceID = 0
+	}
 	return d.DcMgr.DcSetDeviceReset(cardID, deviceID)
 }
 
 // GetBrotherCardID get brother card id
-func (d *DeviceManager) GetBrotherCardID(cardID, deviceID int32) (int32, error) {
+func (d *DeviceManager) GetBrotherCardID(logicID int32) (int32, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.RetError, fmt.Errorf("failed to get cardID in get brother card id by logicID(%d)",
+			logicID)
+	}
 	return d.DcMgr.DcGetBrotherCardID(cardID, deviceID)
 }
 
 // GetOutBandChannelState get out band channel state
-func (d *DeviceManager) GetOutBandChannelState(cardID, deviceID int32) error {
+func (d *DeviceManager) GetOutBandChannelState(logicID int32) error {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf("failed to get cardID in get out band channel state by logicID(%d)", logicID)
+	}
 	return d.DcMgr.DcGetOutBandChannelState(cardID, deviceID)
 }
 
 // PreResetSoc pre reset soc, used before reset out band
-func (d *DeviceManager) PreResetSoc(cardID, deviceID int32) error {
+func (d *DeviceManager) PreResetSoc(logicID int32) error {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf("failed to get cardID in pre reset soc by logicID(%d)", logicID)
+	}
 	return d.DcMgr.DcPreResetSoc(cardID, deviceID)
 }
 
 // SetDeviceResetOutBand reset spec device out band
-func (d *DeviceManager) SetDeviceResetOutBand(cardID, deviceID int32) error {
+func (d *DeviceManager) SetDeviceResetOutBand(logicID int32) error {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf("failed to get cardID in set device reset out band by logicID(%d)", logicID)
+	}
 	return d.DcMgr.DcSetDeviceResetOutBand(cardID, deviceID)
 }
 
 // RescanSoc trigger soc rescan, non-blocking
-func (d *DeviceManager) RescanSoc(cardID, deviceID int32) error {
+func (d *DeviceManager) RescanSoc(logicID int32) error {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf("failed to get cardID in rescan soc by logicID(%d)", logicID)
+	}
 	return d.DcMgr.DcRescanSoc(cardID, deviceID)
 }
 
@@ -725,6 +924,22 @@ func (d *DeviceManager) GetDeviceAllErrorCode(logicID int32) (int32, []int64, er
 			logicID)
 	}
 	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCode(cardID, deviceID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.RetError, nil, fmt.Errorf("failed to get device error code by logicID(%d)", logicID)
+	}
+	return errCount, errCodes, nil
+}
+
+// GetDeviceAllErrorCodeWithTimeOut get npu device all error code with timeout
+func (d *DeviceManager) GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeout time.Duration) (int32, []int64, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.RetError, nil, fmt.Errorf(
+			"failed to get cardID and deviceID in get device error code by logicID(%d)", logicID)
+	}
+	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCodeWithTimeout(cardID, deviceID, timeout)
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return common.RetError, nil, fmt.Errorf("failed to get device error code by logicID(%d)", logicID)
@@ -807,6 +1022,11 @@ func (d *DeviceManager) GetBoardInfo(logicID int32) (common.BoardInfo, error) {
 	return d.DcMgr.DcGetDeviceBoardInfo(cardID, deviceID)
 }
 
+// GetCardElabelV2 get card elabel information
+func (d *DeviceManager) GetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
+	return d.DcMgr.DcGetCardElabelV2(cardID)
+}
+
 // GetPCIEBandwidth get pcie bandwidth
 func (d *DeviceManager) GetPCIEBandwidth(logicID int32, profilingTime int) (common.PCIEBwStat, error) {
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
@@ -824,7 +1044,7 @@ func (d *DeviceManager) GetPCIEBandwidth(logicID int32, profilingTime int) (comm
 // SetIsTrainingCard identifies whether it is a training card according to the usage of card
 func (d *DeviceManager) SetIsTrainingCard() error {
 	devType := d.GetDevType()
-	if strings.HasPrefix(devType, common.Ascend310) {
+	if strings.HasPrefix(devType, api.Ascend310) {
 		d.isTrainingCard = false
 		return nil
 	}
@@ -859,7 +1079,8 @@ func (d *DeviceManager) SetIsTrainingCard() error {
 		}
 	}
 
-	if devType == common.Ascend910B && boardInfo.BoardId == common.A300IA2BoardId {
+	if devType == api.Ascend910B &&
+		(boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId || boardInfo.BoardId == common.Atlas200LA2ZQBoardId) {
 		d.isTrainingCard = false
 		return nil
 	}
@@ -881,16 +1102,6 @@ func (d *DeviceManager) GetDcmiVersion() string {
 // GetMainBoardId  get mainBoardId
 func (d *DeviceManager) GetMainBoardId() uint32 {
 	return d.mainBoardId
-}
-
-// GetValidChipInfo find a valid chip info from all cards
-func (d *DeviceManager) GetValidChipInfo() (common.ChipInfo, error) {
-	chipInfo, err := getValidChipInfo(d.DcMgr)
-	if err != nil {
-		hwlog.RunLog.Error("failed to get valid chip info")
-		return common.ChipInfo{}, err
-	}
-	return chipInfo, nil
 }
 
 // GetDeviceEccInfo query device ECC info
@@ -930,7 +1141,8 @@ func (d *DeviceManager) GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInf
 	}
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d) when get sio info , error: %v", logicID, err)
+		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d) when get sio info , error: %v",
+			logicID, err)
 	}
 	cgoSPodSioInfo, err := d.DcMgr.DcGetSioInfo(cardID, deviceID)
 	if err != nil {
@@ -959,6 +1171,23 @@ func (d *DeviceManager) GetHccsStatisticInfo(logicID int32) (*common.HccsStatist
 	return &cgoHccsStatusInfo, nil
 }
 
+// GetHccsStatisticInfoInU64 get hccs statistic info in u64
+func (d *DeviceManager) GetHccsStatisticInfoInU64(logicID int32) (*common.HccsStatisticInfo, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return buildFailedHccsInfo(), fmt.Errorf("input invalid logicID when get hccs statistic info: %d", logicID)
+	}
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		return buildFailedHccsInfo(), fmt.Errorf("failed to get cardID and deviceID by logicID(%d) "+
+			"when get hccs statistic info, error: %v", logicID, err)
+	}
+	cgoHccsStatusInfo, err := d.DcMgr.DcGetHccsStatisticInfoU64(cardID, deviceID)
+	if err != nil {
+		return buildFailedHccsInfo(), err
+	}
+	return &cgoHccsStatusInfo, nil
+}
+
 // GetHccsBandwidthInfo get hccs bandwidth info
 func (d *DeviceManager) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwidthInfo, error) {
 
@@ -982,9 +1211,9 @@ func (d *DeviceManager) GetHccsBandwidthInfo(logicID int32) (*common.HccsBandwid
 // buildFailedHccsInfo build failed hccs info
 func buildFailedHccsInfo() *common.HccsStatisticInfo {
 	errorResult := &common.HccsStatisticInfo{
-		TxCnt:     make([]uint32, 8),
-		RxCnt:     make([]uint32, 8),
-		CrcErrCnt: make([]uint32, 8),
+		TxCnt:     make([]uint64, 8),
+		RxCnt:     make([]uint64, 8),
+		CrcErrCnt: make([]uint64, 8),
 	}
 	for i := 0; i < 8; i++ {
 		errorResult.TxCnt[i] = common.FailedValue
@@ -1081,24 +1310,143 @@ func (d *DeviceManager) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 	return chips, nil
 }
 
-// DcStartHccsPingMesh start hccs ping mesh
-func (d *DeviceManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int,
-	operate common.HccspingMeshOperate) error {
+// StartHccsPingMesh or UB PingMesh depending on device type
+func (d *DeviceManager) StartHccsPingMesh(logicID int32, portID int, operate common.HccspingMeshOperate) error {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return err
+	}
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID)
+		return d.DcMgr.DcStartUbPingMesh(cardID, deviceID, operate)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcStartHccsPingMesh(cardID, deviceID, portID, operate)
 }
 
-// DcStopHccsPingMesh stop hccs ping mesh
-func (d *DeviceManager) DcStopHccsPingMesh(cardID int32, deviceID int32, portID int, taskID uint) error {
+// StopHccsPingMesh or UB PingMesh depending on device type
+func (d *DeviceManager) StopHccsPingMesh(logicID int32, portID int, taskID uint) error {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return err
+	}
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID)
+		return d.DcMgr.DcStopUbPingMesh(cardID, deviceID, taskID)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcStopHccsPingMesh(cardID, deviceID, portID, taskID)
 }
 
-// DcGetHccsPingMeshInfo get hccs ping mesh info
-func (d *DeviceManager) DcGetHccsPingMeshInfo(cardID int32, deviceID int32, portID int,
-	taskID uint) (*common.HccspingMeshInfo, error) {
+// GetHccsPingMeshInfo or UB PingMesh depending on device type
+func (d *DeviceManager) GetHccsPingMeshInfo(logicID int32, portID int, taskID uint) (*common.HccspingMeshInfo, error) {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return nil, err
+	}
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID, use default meshReplySize)
+		return d.DcMgr.DcGetUbPingMeshInfo(cardID, deviceID, taskID, common.UbPingMeshMaxNum)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcGetHccsPingMeshInfo(cardID, deviceID, portID, taskID)
 }
 
-// DcGetHccsPingMeshState get hccs ping mesh state
-func (d *DeviceManager) DcGetHccsPingMeshState(cardID int32, deviceID int32, portID int, taskID uint) (int, error) {
+// GetHccsPingMeshState or UB PingMesh depending on device type
+func (d *DeviceManager) GetHccsPingMeshState(logicID int32, portID int, taskID uint) (int, error) {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return common.RetError, err
+	}
+	devType := d.GetDevType()
+	if devType == common.Ascend910A5 {
+		// For A5, use UB PingMesh (ignore portID)
+		return d.DcMgr.DcGetUbPingMeshState(cardID, deviceID, taskID)
+	}
+	// Default: use HCCS PingMesh
 	return d.DcMgr.DcGetHccsPingMeshState(cardID, deviceID, portID, taskID)
+}
+
+// GetSuperPodStatus get super pod status
+func (d *DeviceManager) GetSuperPodStatus(logicID int32, sdid uint32) (int, error) {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return common.RetError, err
+	}
+
+	var status int
+	for i := 0; i < maxRetries; i++ {
+		if status, err = d.DcMgr.DcGetSuperPodStatus(cardID, deviceID, sdid); err != nil {
+			hwlog.RunLog.Errorf("get super pod status failed, retry %d, cardID: %d, deviceID: %d, "+
+				"sdid: %d, error: %v", i, cardID, deviceID, sdid, err)
+			continue
+		}
+		break
+	}
+	return status, err
+}
+
+// SetSuperPodStatus set super pod status
+func (d *DeviceManager) SetSuperPodStatus(logicID int32, sdid, status uint32) error {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return err
+	}
+
+	for i := 0; i < maxRetries; i++ {
+		if err = d.DcMgr.DcSetSuperPodStatus(cardID, deviceID, sdid, status); err != nil {
+			hwlog.RunLog.Errorf("set super pod status failed, retry %d, cardID: %d, deviceID: %d, "+
+				"sdid: %d, status: %d, error: %v", i, cardID, deviceID, sdid, status, err)
+			continue
+		}
+		break
+	}
+	return err
+}
+
+// GetUrmaDeviceCount for npu
+func (d *DeviceManager) GetUrmaDeviceCount(logicID int32) (int32, error) {
+	return 0, nil
+}
+
+// GetUrmaDevEidList for npu
+func (d *DeviceManager) GetUrmaDevEidList(logicID int32, index int32) (*common.UrmaDeviceInfo, error) {
+	return &common.UrmaDeviceInfo{}, nil
+}
+
+// GetUrmaDevEidListAll for npu
+func (d *DeviceManager) GetUrmaDevEidListAll(logicID int32) ([]common.UrmaDeviceInfo, error) {
+	return []common.UrmaDeviceInfo{
+		{
+			EidCount: 1,
+			EidInfos: []common.UrmaEidInfo{
+				{Eid: common.Eid{Raw: [common.EidByteSize]byte{}}},
+			},
+		},
+	}, nil
+}
+
+// GetMultiDiePolicy get multi die policy
+func (d *DeviceManager) GetMultiDiePolicy() (dcmi.DiePolicyType, error) {
+	return d.DcMgr.DcGetMultiDiePolicy()
+}
+
+// SetMultiDiePolicy set multi die policy
+func (d *DeviceManager) SetMultiDiePolicy(policy dcmi.DiePolicyType) error {
+	return d.DcMgr.DcSetMultiDiePolicy(policy)
 }

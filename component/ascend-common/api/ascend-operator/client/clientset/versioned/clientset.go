@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/flowcontrol"
 
-	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/client/clientset/versioned/typed/batch/v1"
+	v1 "github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/client/clientset/versioned/typed/batch/v1"
 )
 
 // Interface is the interface definition for Clientset.
@@ -79,6 +79,9 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // If config's RateLimiter is not set and QPS and Burst are acceptable,
 // NewForConfigAndClient will generate a rate-limiter in configShallowCopy.
 func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset, error) {
+	if c == nil || httpClient == nil {
+		return nil, fmt.Errorf("nil pointer")
+	}
 	configShallowCopy := *c
 	if configShallowCopy.RateLimiter == nil && configShallowCopy.QPS > 0 {
 		if configShallowCopy.Burst <= 0 {

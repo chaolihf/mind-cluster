@@ -18,11 +18,11 @@ limitations under the License.
 package scheme
 
 import (
+	v1 "github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-
-	"github.com/chaolihf/mind-cluster/component/ascend-common/api/ascend-operator/apis/batch/v1"
 )
 
 // RuntimeScheme is a Scheme object instance.

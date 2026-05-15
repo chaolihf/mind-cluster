@@ -16,14 +16,14 @@
 package hccn
 
 import (
-	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
+	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/limiter"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/utils"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/devmanager/common"
 )
@@ -38,26 +38,29 @@ const (
 	// LinkDown npu interface down
 	LinkDown string = "DOWN"
 
-	opticalPartLen = 2
-	secondIndex    = 2
-	linkStatusPart = 3
-	base64         = 64
+	opticalPartLen  = 2
+	eleventhIndex   = 11
+	threePart       = 3
+	netSpeedPartLen = 2
+	firstIndex      = 1
+	secondIndex     = 2
+	secondLast      = 2
+	fourthIndex     = 4
+	fifthIndex      = 5
+	sixthIndex      = 6
+	linkStatusPart  = 3
+	base64          = 64
 
 	cardHealthy = 0
 
 	normalCode   = 1
 	abnormalCode = 0
 
-	problemOccurMaxNumbers = 3
-	naValue                = "NA"
-	notSupport             = "not supported"
-	unknownStr             = "Unknown!"
-	generalMaxCardNum      = 16
-)
+	naValue    = "NA"
+	notSupport = "not supported"
+	unknownStr = "Unknown!"
 
-var (
-	getLinkSpeedFromHccnToolErrorMapLock  = &sync.Mutex{}
-	getLinkStatusFromHccnToolErrorMapLock = &sync.Mutex{}
+	limitSize = 1024 * 1024
 )
 
 func getInfoFromHccnTool(args ...string) (string, error) {
@@ -65,16 +68,20 @@ func getInfoFromHccnTool(args ...string) (string, error) {
 	if _, err := utils.CheckPath(hccnTool); err != nil {
 		return "", err
 	}
-	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(hccnTool, args...)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	cmd.Env = []string{
+		"PATH=" + os.Getenv("PATH"),
+		utils.LdLibPath + "=" + os.Getenv(utils.LdLibPath),
+	}
+	limitStdout := limiter.NewLimitedWriter(limitSize)
+	cmd.Stdout = limitStdout
+	cmd.Stderr = limiter.NewLimitedWriter(limitSize)
 	err := cmd.Run()
 	if err != nil {
 		return "", err
 	}
 
-	return string(stdout.Bytes()), nil
+	return string(limitStdout.GetBufferBytes()), nil
 }
 
 // GetNPULinkStatus exec "hccn_tool -i * -link -g" to get link status
@@ -84,8 +91,6 @@ func GetNPULinkStatus(phyID int32) (string, error) {
 	// success result example is: link status: DOWN
 	outStr, err := getInfoFromHccnTool(args...)
 	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
-	getLinkStatusFromHccnToolErrorMapLock.Lock()
-	defer getLinkStatusFromHccnToolErrorMapLock.Unlock()
 	if err != nil {
 		return common.Abnormal, buildHccnErr(phyID, "link status", err)
 	}
@@ -106,8 +111,6 @@ func GetNPULinkSpeed(phyID int32) (int, error) {
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-speed", "-g"}
 	// command example: hccn_tool -i 0 -speed -g
 	// success result example is: Speed: 100000 Mb/s
-	getLinkSpeedFromHccnToolErrorMapLock.Lock()
-	defer getLinkSpeedFromHccnToolErrorMapLock.Unlock()
 	outStr, err := getInfoFromHccnTool(args...)
 	if err != nil {
 		return common.RetError, buildHccnErr(phyID, "link speed", err)
@@ -337,4 +340,346 @@ func GetNetworkHealthy(netCode uint32) int {
 
 func buildHccnErr(phyID int32, msg string, err error) error {
 	return fmt.Errorf("phyID(%d),get npu %s info failed,error is :%v", phyID, msg, err)
+}
+
+// GetNPULinkStatusNpu exec "hccn_tool -g -link -i device_id -u udie_id -p port_id" to get link status
+func GetNPULinkStatusNpu(logicID, udieID, portID int32) (string, error) {
+	args := []string{"-g", "-link", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)), "-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -link -i 58 -u 0 -p 4
+	// success result example is: link status: DOWN
+	outStr, err := getInfoFromHccnTool(args...)
+	hwlog.RunLog.Debugf("hccn_tool command: %v exec result: %v", args, outStr)
+	if err != nil {
+		return common.Abnormal, buildHccnErrA5("link status", err)
+	}
+	replacedStr := strings.ReplaceAll(outStr, newLine, "")
+	outArr := strings.Split(replacedStr, space)
+	if len(outArr) != linkStatusPart {
+		return common.Abnormal, buildHccnErrA5("link status",
+			fmt.Errorf("length of output %v is not equal to %v", outArr, linkStatusPart))
+	}
+
+	status := outArr[secondIndex]
+	hwlog.RunLog.Debugf("hccn_tool get npu link status: %s", status)
+	return status, nil
+}
+
+// GetNPUInterfaceTrafficNpu exec "hccn_tool -g -bandwidth -i device_id -u udie_id -p port_id -time [1-226]" to get bandwidth info
+func GetNPUInterfaceTrafficNpu(logicID, udieID, portID, durationTime int32) (float64, float64, error) {
+	const (
+		noTraffic      = common.RetError
+		trafficPartLen = 4
+		txStr          = "TX:"
+		rxStr          = "RX:"
+	)
+	args := []string{"-g", "-bandwidth", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)), "-p",
+		strconv.Itoa(int(portID)), "-time", strconv.Itoa(int(durationTime))}
+	// success result has two lines:
+	// Bandwidth TX: 0.00 MB/sec
+	// Bandwidth RX: 0.00 MB/sec
+	outStr, err := getInfoFromHccnTool(args...)
+	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
+	if err != nil {
+		return noTraffic, noTraffic, buildHccnErrA5("interface traffic", err)
+	}
+	var (
+		tx = float64(noTraffic)
+		rx = float64(noTraffic)
+	)
+	lines := strings.Split(outStr, newLine)
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		trafficArr := strings.Fields(line)
+		hwlog.RunLog.Debugf("npu bandwidth split as: %v", trafficArr)
+		if len(trafficArr) != trafficPartLen {
+			continue
+		}
+		if strings.Contains(line, txStr) {
+			tmpTx, err := strconv.ParseFloat(trafficArr[secondIndex], base64)
+			if err != nil {
+				hwlog.RunLog.Errorf("get float data from Bandwidth TX err: %v", err)
+				continue
+			}
+			tx = tmpTx
+		}
+		if strings.Contains(line, rxStr) {
+			tmpRx, err := strconv.ParseFloat(trafficArr[secondIndex], base64)
+			if err != nil {
+				hwlog.RunLog.Errorf("get float data from Bandwidth RX err: %v", err)
+				continue
+			}
+			rx = tmpRx
+		}
+	}
+	return tx, rx, nil
+}
+
+// GetNPULinkSpeedNpu exec "hccn_tool -g -speed -i phy_id -u udie_id -p port_id" to get link speed
+func GetNPULinkSpeedNpu(logicID, udieID, portID int32) (int, error) {
+	args := []string{"-g", "-speed", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
+		"-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -speed -i 56 -u 0 -p 4
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return common.RetError, buildHccnErrA5("link speed", err)
+	}
+	return getSpeedFromStrA5(outStr)
+}
+
+func getSpeedFromStrA5(str string) (int, error) {
+	if strings.Contains(str, naValue) {
+		return common.RetError, buildHccnErrA5("link speed", fmt.Errorf("npu link speed is unknown, port is down"))
+	}
+
+	lines := strings.Split(strings.TrimSpace(str), "\n")
+	var dataRows []string
+	for _, line := range lines {
+		if line != "" && !strings.Contains(line, "+") && strings.Contains(line, "|") {
+			dataRows = append(dataRows, line)
+		}
+	}
+	parts := strings.Split(dataRows[firstIndex], "|")
+
+	speedInfo := strings.Split(strings.TrimSpace(parts[fourthIndex]), space)
+	if len(speedInfo) != netSpeedPartLen {
+		return common.RetError, buildHccnErrA5("port speed ",
+			fmt.Errorf("length of output %v is not equal to %v", speedInfo, netSpeedPartLen))
+	}
+	speed, err := strconv.Atoi(speedInfo[0])
+	if err != nil {
+		return common.RetError, buildHccnErrA5("convert speed from string failed", err)
+	}
+
+	return speed, nil
+}
+
+func buildHccnErrA5(msg string, err error) error {
+	return fmt.Errorf("get npu %s info failed,error is :%v", msg, err)
+}
+
+// GetNpuOpticalInfoNpu get npu optical info from hccn_tool
+func GetNpuOpticalInfoNpu(logicID, udieID, portID int32) (map[string]string, error) {
+	args := []string{"-g", "-optical", "-i", strconv.Itoa(int(logicID)), "-u",
+		strconv.Itoa(int(udieID)), "-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -optical -i 56 -u 0 -p 4
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("optical", err)
+	}
+	if !strings.Contains(outStr, "Power") {
+		return map[string]string{}, buildHccnErrA5("optical", fmt.Errorf("optical info is not valid"))
+	}
+	lines := strings.Split(strings.TrimSpace(outStr), "\n")
+	result, err := parseSecondTableColumns(lines)
+	hwlog.RunLog.Debugf("logicID:%v, udiePort:%v, portID:%v optical info: %v", logicID, udieID, portID, result)
+	return result, err
+}
+
+func parseSecondTableColumns(lines []string) (map[string]string, error) {
+	opticalInfoMap := make(map[string]string)
+	var opticalIndex []string
+
+	tableSepCount := 0
+	inDataRow := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		if strings.HasPrefix(line, "+-") {
+			tableSepCount++
+			if tableSepCount == fifthIndex {
+				inDataRow = true
+			} else if tableSepCount == sixthIndex {
+				break
+			}
+			continue
+		}
+
+		if !inDataRow {
+			continue
+		}
+		parts := strings.Split(line, "|")
+		if strings.Contains(line, "optical_") {
+			opticalIndex = append(opticalIndex, strings.TrimSpace(parts[len(parts)-secondLast]))
+		}
+		col4 := strings.TrimSpace(parts[fourthIndex])
+		col5 := strings.TrimSpace(parts[fifthIndex])
+		if len(parts) < eleventhIndex || strings.Contains(col5, "-") {
+			continue
+		}
+		if col4 != "" && strings.Contains(line, "xPower") {
+			opticalInfoMap[col4] = col5
+		}
+	}
+	opticalInfoMap["optical_index"] = strconv.Itoa(len(opticalIndex))
+	return opticalInfoMap, nil
+}
+
+// GetFloatDataFromStrNpu get float data from string with space
+func GetFloatDataFromStrNpu(str string) (float64, error) {
+	if str == "" {
+		hwlog.RunLog.Debugf("str is nil")
+		return common.RetError, nil
+	}
+	if strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
+		return common.RetError, fmt.Errorf("npu optical info is not valid")
+	}
+	floatData, err := strconv.ParseFloat(str, base64)
+	if err != nil {
+		return common.RetError, err
+	}
+	return floatData, nil
+}
+
+// GetIntDataFromStrNpu get int data from string
+func GetIntDataFromStrNpu(str string) (int, error) {
+	if str == "" {
+		hwlog.RunLog.Debugf("str is nil")
+		return common.RetError, nil
+	}
+	if strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
+		return common.RetError, fmt.Errorf("npu optical info is not valid")
+	}
+	intData, err := strconv.Atoi(str)
+	if err != nil {
+		return common.RetError, err
+	}
+	return intData, nil
+}
+
+// GetNPUUbStatInfo  get npu ub stat information
+func GetNPUUbStatInfo(logicID, udieID, portID int32) (map[string]string, error) {
+	args := []string{"-g", "-stat", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
+		"-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -stat -i 0 -u 0 -p 4
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("ub stat info", err)
+	}
+	lines := strings.Split(outStr, newLine)
+	ubStatInfoMap := make(map[string]string)
+	for _, line := range lines {
+		ubParts := strings.Split(line, colon)
+		if len(ubParts) != opticalPartLen {
+			continue
+		}
+		ubKey := strings.TrimSpace(ubParts[0])
+		ubValue := strings.TrimSpace(ubParts[1])
+		ubStatInfoMap[ubKey] = ubValue
+	}
+	return ubStatInfoMap, nil
+}
+
+// GetIntDataFromStr get int data from string  without err info
+func GetIntDataFromStr(str, dataType string) int {
+	if str == "" || strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
+		return common.RetError
+	}
+	intData, err := strconv.Atoi(str)
+	if err != nil {
+		hwlog.RunLog.Errorf("convert %v ub data type: %v to an int number failed, err: %v", str, dataType, err)
+		return common.RetError
+	}
+	return intData
+}
+
+// GetNpuDevNetPortInfo retrieves NPU device information and returns UdieID-PortID mapping
+func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
+	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
+	// command example: hccn_tool -g -dev_info -i 0
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("npu dev info", err)
+	}
+
+	// First, log the full output for debugging
+	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
+
+	// Split output into lines and parse table data
+	lines := strings.Split(outStr, "\n")
+	result, err := parseDeviceTable(lines)
+	if err != nil {
+		return nil, buildHccnErrA5("npu dev info", err)
+	}
+
+	return result, nil
+}
+
+// parseDeviceTable processes device information table and returns UdieID-PortID mapping
+func parseDeviceTable(lines []string) (map[int][]int, error) {
+	result := make(map[int][]int)
+	isInTable := false
+	separatorCount := 0
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			continue // Skip empty lines
+		}
+
+		// Handle table separator lines
+		if strings.HasPrefix(trimmedLine, "+-") {
+			separatorCount++
+			if separatorCount == firstIndex {
+				isInTable = true
+			} else if separatorCount == threePart {
+				hwlog.RunLog.Debugf("Found end of first table, stopping parsing")
+				break
+			}
+			continue
+		}
+
+		// Process table data lines
+		if !isInTable || !strings.HasPrefix(trimmedLine, "|") {
+			continue
+		}
+		// Skip header row
+		lineLower := strings.ToLower(trimmedLine)
+		if !strings.Contains(lineLower, "ub") {
+			continue
+		}
+
+		// Parse device row data
+		uDieID, portID, err := parseDeviceRow(trimmedLine)
+		if err != nil {
+			hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
+			continue
+		}
+		result[uDieID] = append(result[uDieID], portID)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf("failed to parse any valid data rows")
+	}
+	return result, nil
+}
+
+// parseDeviceRow extracts and validates UdieID and PortID from a single table row
+func parseDeviceRow(trimmedLine string) (int, int, error) {
+	// Extract columns from table row
+	rowData := strings.TrimPrefix(trimmedLine, "|")
+	rowData = strings.TrimSuffix(rowData, "|")
+	columns := strings.Split(rowData, "|")
+	for i, col := range columns {
+		columns[i] = strings.TrimSpace(col)
+	}
+
+	// Validate columns
+	if len(columns) < secondIndex || columns[0] == "" || columns[1] == "" {
+		return 0, 0, fmt.Errorf("insufficient or empty columns")
+	}
+
+	// Convert to integers
+	uDieID, err := strconv.Atoi(columns[0])
+	if err != nil {
+		return 0, 0, err
+	}
+	portID, err := strconv.Atoi(columns[1])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return uDieID, portID, nil
 }

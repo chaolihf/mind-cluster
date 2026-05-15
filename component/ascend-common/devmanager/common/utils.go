@@ -21,12 +21,33 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
+	"github.com/chaolihf/mind-cluster/component/ascend-common/api"
 	"github.com/chaolihf/mind-cluster/component/ascend-common/common-utils/hwlog"
 )
 
 var (
-	reg910A = regexp.MustCompile(Pattern910A)
-	reg910B = regexp.MustCompile(Pattern910B)
+	reg910A           = regexp.MustCompile(api.Ascend910APattern)
+	reg910B           = regexp.MustCompile(api.Ascend910BPattern)
+	reg310P           = regexp.MustCompile(api.Ascend310PPattern)
+	templateNameLists = map[string]sets.String{
+		api.Ascend310P: sets.NewString(
+			"vir04", "vir02", "vir01", "vir04_3c",
+			"vir02_1c", "vir04_4c_dvpp", "vir04_3c_ndvpp",
+		),
+		api.Ascend910A: sets.NewString(
+			"vir16", "vir08", "vir04", "vir02", "vir01",
+		),
+		api.Ascend910B: sets.NewString(
+			"vir03_1c_8g", "vir05_1c_8g", "vir05_1c_16g",
+			"vir06_1c_16g", "vir10_3c_16g", "vir10_3c_16g_nm",
+			"vir10_3c_32g", "vir10_4c_16g_m", "vir12_3c_32g",
+		),
+		api.Ascend910A3: sets.NewString(
+			"vir12_3c_32g", "vir06_1c_16g", "vir05_1c_16g", "vir10_3c_32g",
+		),
+	}
 )
 
 // IsGreaterThanOrEqualInt32 check num range
@@ -137,51 +158,29 @@ func IsValidHccspingMeshOperate(operate HccspingMeshOperate) error {
 
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
-	if strings.Contains(chipName, "310P") {
-		return Ascend310P
+	if reg310P.MatchString(chipName) {
+		return api.Ascend310P
 	}
-	if strings.Contains(chipName, "310B") {
-		return Ascend310B
+	if strings.Contains(chipName, api.Ascend310BNo) {
+		return api.Ascend310B
 	}
-	if strings.Contains(chipName, "310") {
-		return Ascend310
+	if strings.Contains(chipName, api.Ascend310No) {
+		return api.Ascend310
 	}
 	if reg910B.MatchString(chipName) {
-		return Ascend910B
+		return api.Ascend910B
 	}
 	if reg910A.MatchString(chipName) {
-		return Ascend910
+		return api.Ascend910A
 	}
 	return ""
-}
-
-func get910TemplateNameList() map[string]struct{} {
-	return map[string]struct{}{"vir16": {}, "vir08": {}, "vir04": {}, "vir02": {}, "vir01": {}}
-}
-
-func get910BTemplateNameList() map[string]struct{} {
-	return map[string]struct{}{
-		"vir03_1c_8g": {}, "vir05_1c_8g": {}, "vir05_1c_16g": {},
-		"vir06_1c_16g": {}, "vir10_3c_16g": {}, "vir10_3c_16g_nm": {},
-		"vir10_3c_32g": {}, "vir10_4c_16g_m": {}, "vir12_3c_32g": {}}
-}
-
-func get310PTemplateNameList() map[string]struct{} {
-	return map[string]struct{}{"vir04": {}, "vir02": {}, "vir01": {}, "vir04_3c": {}, "vir02_1c": {},
-		"vir04_4c_dvpp": {}, "vir04_3c_ndvpp": {}}
 }
 
 // IsValidTemplateName check template name meet the requirement
 func IsValidTemplateName(devType, templateName string) bool {
 	isTemplateNameValid := false
-	switch devType {
-	case Ascend310P:
-		_, isTemplateNameValid = get310PTemplateNameList()[templateName]
-	case Ascend910:
-		_, isTemplateNameValid = get910TemplateNameList()[templateName]
-	case Ascend910B:
-		_, isTemplateNameValid = get910BTemplateNameList()[templateName]
-	default:
+	if templateNames, ok := templateNameLists[devType]; ok {
+		_, isTemplateNameValid = templateNames[templateName]
 	}
 	return isTemplateNameValid
 }
@@ -220,12 +219,6 @@ func SetHccsBWProfilingTime(hccsbwProfilingTime int) {
 	HccsBWProfilingTime = hccsbwProfilingTime
 }
 
-// Is910BChip current chip is 910B or not
-func Is910BChip(chipName string) bool {
-	reg910B := regexp.MustCompile(Pattern910B)
-	return reg910B.MatchString(chipName)
-}
-
 // DeepCopyChipInfo copy chip info deeply
 func DeepCopyChipInfo(chipInfo *ChipInfo) *ChipInfo {
 	if chipInfo == nil {
@@ -236,20 +229,6 @@ func DeepCopyChipInfo(chipInfo *ChipInfo) *ChipInfo {
 		Type:    chipInfo.Type,
 		Name:    chipInfo.Name,
 		Version: chipInfo.Version,
-	}
-}
-
-// DeepCopyBoardInfo copy board info deeply
-func DeepCopyBoardInfo(boardInfo *BoardInfo) *BoardInfo {
-	if boardInfo == nil {
-		return nil
-	}
-
-	return &BoardInfo{
-		BoardId: boardInfo.BoardId,
-		PcbId:   boardInfo.PcbId,
-		BomId:   boardInfo.BomId,
-		SlotId:  boardInfo.SlotId,
 	}
 }
 
@@ -266,224 +245,6 @@ func DeepCopyVDevActivityInfo(vDevActivityInfo *VDevActivityInfo) *VDevActivityI
 		VDevUsedMem:    vDevActivityInfo.VDevUsedMem,
 		VDevAiCore:     vDevActivityInfo.VDevAiCore,
 		IsVirtualDev:   vDevActivityInfo.IsVirtualDev,
-	}
-}
-
-// DeepCopyPcieBwInfo copy PCIEBwStat deeply
-func DeepCopyPcieBwInfo(pcieBwInfo *PCIEBwStat) *PCIEBwStat {
-	if pcieBwInfo == nil {
-		return nil
-	}
-
-	return &PCIEBwStat{
-		PcieRxPBw:   pcieBwInfo.PcieRxPBw,
-		PcieRxNPBw:  pcieBwInfo.PcieRxNPBw,
-		PcieRxCPLBw: pcieBwInfo.PcieRxCPLBw,
-		PcieTxPBw:   pcieBwInfo.PcieTxPBw,
-		PcieTxNPBw:  pcieBwInfo.PcieTxNPBw,
-		PcieTxCPLBw: pcieBwInfo.PcieTxCPLBw,
-	}
-}
-
-// DeepCopyMemoryInfo copy MemoryInfo deeply
-func DeepCopyMemoryInfo(memoryInfo *MemoryInfo) *MemoryInfo {
-	if memoryInfo == nil {
-		return nil
-	}
-
-	return &MemoryInfo{
-		MemorySize:      memoryInfo.MemorySize,
-		MemoryAvailable: memoryInfo.MemoryAvailable,
-		Frequency:       memoryInfo.Frequency,
-		Utilization:     memoryInfo.Utilization,
-	}
-}
-
-// DeepCopyHbmInfo copy HbmInfo deeply
-func DeepCopyHbmInfo(hbmInfo *HbmInfo) *HbmInfo {
-	if hbmInfo == nil {
-		return nil
-	}
-
-	return &HbmInfo{
-		MemorySize:        hbmInfo.MemorySize,
-		Frequency:         hbmInfo.Frequency,
-		Usage:             hbmInfo.Usage,
-		Temp:              hbmInfo.Temp,
-		BandWidthUtilRate: hbmInfo.BandWidthUtilRate,
-	}
-}
-
-// DeepCopyStatInfo copy StatInfo deeply
-func DeepCopyStatInfo(statInfo *StatInfo) *StatInfo {
-	if statInfo == nil {
-		return nil
-	}
-
-	return &StatInfo{
-		MacRxPauseNum:          statInfo.MacRxPauseNum,
-		MacTxPauseNum:          statInfo.MacTxPauseNum,
-		MacRxPfcPktNum:         statInfo.MacRxPfcPktNum,
-		MacTxPfcPktNum:         statInfo.MacTxPfcPktNum,
-		MacRxBadPktNum:         statInfo.MacRxBadPktNum,
-		MacTxBadPktNum:         statInfo.MacTxBadPktNum,
-		RoceRxAllPktNum:        statInfo.RoceRxAllPktNum,
-		RoceTxAllPktNum:        statInfo.RoceTxAllPktNum,
-		RoceRxErrPktNum:        statInfo.RoceRxErrPktNum,
-		RoceTxErrPktNum:        statInfo.RoceTxErrPktNum,
-		RoceRxCnpPktNum:        statInfo.RoceRxCnpPktNum,
-		RoceTxCnpPktNum:        statInfo.RoceTxCnpPktNum,
-		RoceNewPktRtyNum:       statInfo.RoceNewPktRtyNum,
-		MacTxBadOctNum:         statInfo.MacTxBadOctNum,
-		MacRxBadOctNum:         statInfo.MacRxBadOctNum,
-		RoceUnexpectedAckNum:   statInfo.RoceUnexpectedAckNum,
-		RoceOutOfOrderNum:      statInfo.RoceOutOfOrderNum,
-		RoceVerificationErrNum: statInfo.RoceVerificationErrNum,
-		RoceQpStatusErrNum:     statInfo.RoceQpStatusErrNum,
-		RoceEcnDBNum:           statInfo.RoceEcnDBNum,
-		MacRXFcsErrPktNum:      statInfo.MacRXFcsErrPktNum,
-	}
-}
-
-// DeepCopyOpticalInfo copy OpticalInfo deeply
-func DeepCopyOpticalInfo(opticalInfo *OpticalInfo) *OpticalInfo {
-	if opticalInfo == nil {
-		return nil
-	}
-
-	return &OpticalInfo{
-		OpticalState:    opticalInfo.OpticalState,
-		OpticalTxPower0: opticalInfo.OpticalTxPower0,
-		OpticalTxPower1: opticalInfo.OpticalTxPower1,
-		OpticalTxPower2: opticalInfo.OpticalTxPower2,
-		OpticalTxPower3: opticalInfo.OpticalTxPower3,
-		OpticalRxPower0: opticalInfo.OpticalRxPower0,
-		OpticalRxPower1: opticalInfo.OpticalRxPower1,
-		OpticalRxPower2: opticalInfo.OpticalRxPower2,
-		OpticalRxPower3: opticalInfo.OpticalRxPower3,
-		OpticalVcc:      opticalInfo.OpticalVcc,
-		OpticalTemp:     opticalInfo.OpticalTemp,
-	}
-}
-
-// DeepCopyLinkSpeedInfo copy LinkSpeedInfo deeply
-func DeepCopyLinkSpeedInfo(linkSpeedInfo *LinkSpeedInfo) *LinkSpeedInfo {
-	if linkSpeedInfo == nil {
-		return nil
-	}
-
-	return &LinkSpeedInfo{
-		Speed: linkSpeedInfo.Speed,
-	}
-}
-
-// DeepCopyLinkStatInfo copy LinkStatInfo deeply
-func DeepCopyLinkStatInfo(linkStatInfo *LinkStatInfo) *LinkStatInfo {
-	if linkStatInfo == nil {
-		return nil
-	}
-
-	return &LinkStatInfo{
-		LinkUPNum: linkStatInfo.LinkUPNum,
-	}
-}
-
-// DeepCopyLinkStatusInfo copy LinkStatusInfo deeply
-func DeepCopyLinkStatusInfo(linkStatusInfo *LinkStatusInfo) *LinkStatusInfo {
-	if linkStatusInfo == nil {
-		return nil
-	}
-
-	return &LinkStatusInfo{
-		LinkState: linkStatusInfo.LinkState,
-	}
-}
-
-// DeepCopyBandwidthInfo copy BandwidthInfo deeply
-func DeepCopyBandwidthInfo(bandwidthInfo *BandwidthInfo) *BandwidthInfo {
-	if bandwidthInfo == nil {
-		return nil
-	}
-
-	return &BandwidthInfo{
-		TxValue: bandwidthInfo.TxValue,
-		RxValue: bandwidthInfo.RxValue,
-	}
-}
-
-// DeepCopyDevProcessInfo copy DevProcessInfo deeply
-func DeepCopyDevProcessInfo(devProcessInfo *DevProcessInfo) *DevProcessInfo {
-	if devProcessInfo == nil {
-		return nil
-	}
-
-	devProcArray := make([]DevProcInfo, 0)
-	for _, item := range devProcessInfo.DevProcArray {
-		devProcArray = append(devProcArray, item)
-	}
-	return &DevProcessInfo{
-		DevProcArray: devProcArray,
-		ProcNum:      devProcessInfo.ProcNum,
-	}
-}
-
-// DeepCopyECCInfo copy ECCInfo deeply
-func DeepCopyECCInfo(eccInfo *ECCInfo) *ECCInfo {
-	if eccInfo == nil {
-		return nil
-	}
-
-	return &ECCInfo{
-		EnableFlag:                eccInfo.EnableFlag,
-		SingleBitErrorCnt:         eccInfo.SingleBitErrorCnt,
-		DoubleBitErrorCnt:         eccInfo.DoubleBitErrorCnt,
-		TotalSingleBitErrorCnt:    eccInfo.TotalSingleBitErrorCnt,
-		TotalDoubleBitErrorCnt:    eccInfo.TotalDoubleBitErrorCnt,
-		SingleBitIsolatedPagesCnt: eccInfo.SingleBitIsolatedPagesCnt,
-		DoubleBitIsolatedPagesCnt: eccInfo.DoubleBitIsolatedPagesCnt,
-	}
-}
-
-// DeepCopySioCrcErrStatisticInfo copy SioCrcErrStatisticInfo deeply
-func DeepCopySioCrcErrStatisticInfo(sioInfo *SioCrcErrStatisticInfo) *SioCrcErrStatisticInfo {
-	if sioInfo == nil {
-		return nil
-	}
-
-	return &SioCrcErrStatisticInfo{
-		TxErrCnt: sioInfo.TxErrCnt,
-		RxErrCnt: sioInfo.RxErrCnt,
-		Reserved: sioInfo.Reserved,
-	}
-}
-
-// DeepCopyHccsStatisticInfo copy HccsStatisticInfo deeply
-func DeepCopyHccsStatisticInfo(hccsStatisticInfo *HccsStatisticInfo) *HccsStatisticInfo {
-	if hccsStatisticInfo == nil {
-		return nil
-	}
-
-	return &HccsStatisticInfo{
-		TxCnt:            hccsStatisticInfo.TxCnt,
-		RxCnt:            hccsStatisticInfo.RxCnt,
-		CrcErrCnt:        deepCopySlice(hccsStatisticInfo.CrcErrCnt).([]uint32),
-		retryCnt:         deepCopySlice(hccsStatisticInfo.retryCnt).([]uint32),
-		reservedFieldCnt: deepCopySlice(hccsStatisticInfo.reservedFieldCnt).([]uint32),
-	}
-}
-
-// DeepCopyHccsBandwidthInfo copy HccsStatisticInfo deeply
-func DeepCopyHccsBandwidthInfo(hccsBandwidthInfo *HccsBandwidthInfo) *HccsBandwidthInfo {
-	if hccsBandwidthInfo == nil {
-		return nil
-	}
-
-	return &HccsBandwidthInfo{
-		ProfilingTime: hccsBandwidthInfo.ProfilingTime,
-		TotalTxbw:     hccsBandwidthInfo.TotalTxbw,
-		TotalRxbw:     hccsBandwidthInfo.TotalRxbw,
-		TxBandwidth:   deepCopySlice(hccsBandwidthInfo.TxBandwidth).([]float64),
-		RxBandwidth:   deepCopySlice(hccsBandwidthInfo.RxBandwidth).([]float64),
 	}
 }
 
@@ -513,7 +274,9 @@ func deepCopySlice(slice interface{}) interface{} {
 func GetDevType(chipName string, boardId uint32) string {
 	var devType string
 	if Is910A3Chip(boardId) {
-		devType = Ascend910A3
+		devType = api.Ascend910A3
+	} else if Is910A5Chip(chipName) {
+		devType = api.Ascend910A5
 	} else {
 		devType = GetDeviceTypeByChipName(chipName)
 	}

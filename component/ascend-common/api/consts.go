@@ -25,11 +25,6 @@ const (
 	MsLocalWorkerEnv = "MS_LOCAL_WORKER"
 )
 
-// NPU
-const (
-	ResourceNamePrefix = "huawei.com/"
-)
-
 // NameSpace
 const (
 	DLNamespace = "mindx-dl"
@@ -46,19 +41,52 @@ const (
 	NodeSNAnnotation = "product-serial-number"
 	// BaseDevInfoAnno annotation value is device base info
 	BaseDevInfoAnno = "baseDeviceInfos"
+
+	// AcceleratorTypeKey the node label key of accelerator type
+	AcceleratorTypeKey = "accelerator-type"
+	// AcceleratorTypeModule910A3x16SuperPod for 16-npu 910A3-SuperPod hardware
+	AcceleratorTypeModule910A3x16SuperPod = "module-a3-16-super-pod"
+	// AcceleratorTypeModule910A3x8SuperPod for 8-npu 910A3-SuperPod hardware
+	AcceleratorTypeModule910A3x8SuperPod = "module-a3-8-super-pod"
 )
 
 // Pod
 const (
 	// PodUsedHardwareTypeAnno annotation value is the hardware type that real used in pod
 	PodUsedHardwareTypeAnno = "mind-cluster/hardware-type"
-	// Pod910DeviceAnno annotation value is for generating 910 hccl rank table
-	Pod910DeviceAnno = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
 	// PodRankIndexAnno annotation value is rank index of the pod
 	PodRankIndexAnno = "hccl/rankIndex"
+	// SuperPodIDAnno annotation key of the super pod id
+	SuperPodIDAnno = "super-pod-id"
+
+	// Hotswitch Annotations
+
+	// InHotSwitchFlowKey in hot switch flow key
+	InHotSwitchFlowKey = "inHotSwitchFlow"
+	// InHotSwitchFlowValue in hot switch flow true
+	InHotSwitchFlowValue = "true"
+	// BackupNewPodNameKey backup new pod name key
+	BackupNewPodNameKey = "backupNewPodName"
+	// BackupSourcePodNameKey backup source pod name key
+	BackupSourcePodNameKey = "backupSourcePodName"
+	// NeedOperatorOpeKey need operator ope key
+	NeedOperatorOpeKey = "needOperatorOpe"
+	// NeedVolcanoOpeKey need volcano ope key
+	NeedVolcanoOpeKey = "needVolcanoOpe"
+	// OpeTypeDelete ope type delete
+	OpeTypeDelete = "delete"
+	// OpeTypeCreate ope type create
+	OpeTypeCreate = "create"
+	// PodTypeKey pod type key
+	PodTypeKey = "podType"
+	// PodTypeBackup pod type backup
+	PodTypeBackup = "backup"
+	// DefaultRetryTimes default retry times
+	DefaultRetryTimes = 3
+	// MasterPodRank master pod rank
+	MasterPodRank = "0"
 )
 
-// PodGroup
 const (
 	// AtlasTaskLabel label value task kind, eg. ascend-910, ascend-{xxx}b
 	AtlasTaskLabel = "ring-controller.atlas"
@@ -79,4 +107,203 @@ const (
 	CIMCMLabelKey = "mx-consumer-cim"
 	// PubFaultCMLabelKey public fault cm label key
 	PubFaultCMLabelKey = "mc-consumer-publicfault"
+)
+
+const (
+	// FaultJobCmName fault job cm name
+	FaultJobCmName = "fault-job-info"
+)
+
+const (
+	// PodScheduleLabel pod schedule label
+	PodScheduleLabel = "pod-rescheduling"
+	// ProcessScheduleLabel process schedule label
+	ProcessScheduleLabel = "process-recover-enable"
+	// RecoverStrategyKey recover strategy key in job annotation
+	RecoverStrategyKey = "recover-strategy"
+)
+
+// process schedule strategy
+const (
+	// RecoverStrategy recover strategy
+	RecoverStrategy = "recover"
+	// RetryStrategy retry strategy
+	RetryStrategy = "retry"
+	// InPlaceStrategy recover in place strategy
+	InPlaceStrategy = "recover-in-place"
+	// DumpStrategy dump strategy
+	DumpStrategy = "dump"
+	// ExitStrategy exit strategy
+	ExitStrategy = "exit"
+	// ElasticTraining elastic-training strategy
+	ElasticTraining = "elastic-training"
+)
+
+// process schedule common env
+const (
+	// ProcessRecoverEnv process recover env
+	ProcessRecoverEnv = "PROCESS_RECOVER"
+	// ElasticRecoverEnv elastic process recover env
+	ElasticRecoverEnv = "ELASTIC_PROCESS_RECOVER_ENABLE"
+	// EnableRestartEnv enable restart env
+	EnableRestartEnv = "ENABLE_RESTART_FAULT_PROCESS"
+)
+
+// process schedule pytorch env
+const (
+	// HighAvailableEnv high available env
+	HighAvailableEnv = "HIGH_AVAILABILITY"
+	// PtCloseWatchDogKey pt close watch dog key
+	PtCloseWatchDogKey = "HCCL_ASYNC_ERROR_HANDLING"
+	// PtCloseWatchDogValue pt close watch dog value
+	PtCloseWatchDogValue = "0"
+)
+
+// process schedule ms env
+const (
+	// MsRecoverEnv ms recover env
+	MsRecoverEnv = "MS_ENABLE_TFT"
+	// EnableMS enable ms
+	EnableMS = "MINDIO_FOR_MINDSPORE"
+	// MsDumpStrategy ms dump strategy
+	MsDumpStrategy = "TTP:1"
+	// MsUceStrategy ms uce strategy
+	MsUceStrategy = "UCE:1"
+	// MsArfStrategy ms arf strategy
+	MsArfStrategy = "ARF:1"
+	// MsHcceStrategy ms hcce strategy
+	MsHcceStrategy = "HCCE:1"
+	// MsRscStrategy ms rsc strategy
+	MsRscStrategy = "RSC:1"
+	// MsCloseWatchDogKey ms close watch dog key
+	MsCloseWatchDogKey = "MS_ENABLE_THM"
+	// MsCloseWatchDogValue ms close watch dog value
+	MsCloseWatchDogValue = `{HCCL_WATCHDOG:0}`
+)
+
+const (
+	// EnableFunc Enable Func
+	EnableFunc = "on"
+	// EnableFlag enable flag
+	EnableFlag = "1"
+	// PytorchFramework framework
+	PytorchFramework = "pytorch"
+	// MindSporeFramework framework
+	MindSporeFramework = "mindspore"
+)
+
+const (
+	// RescheduleInPlaceKey reschedule in place key
+	RescheduleInPlaceKey = "reschedule-in-place"
+	// RescheduleInPlaceValue reschedule in place value
+	RescheduleInPlaceValue = "true"
+)
+
+const (
+	// DeviceResetTimeout device reset timeout
+	DeviceResetTimeout = "deviceResetTimeout"
+	// DefaultDeviceResetTimeout default device reset timeout is 60 seconds
+	DefaultDeviceResetTimeout = 60
+	// MinDeviceResetTimeout min device reset timeout is 10 seconds
+	MinDeviceResetTimeout = 10
+	// MaxDeviceResetTimeout max device reset timeout is 600 seconds
+	MaxDeviceResetTimeout = 600
+)
+
+const (
+	// SubHealthyStrategy config in pod group label for subHealthy fault strategy
+	SubHealthyStrategy = "subHealthyStrategy"
+	// SubHealthyHotSwitch strategy name of hot switch
+	SubHealthyHotSwitch = "hotSwitch"
+)
+
+const (
+	// MinAvailableKey decide minAvailable of task
+	MinAvailableKey = "huawei.com/schedule_minAvailable"
+	// SchedulePolicyAnnoKey annotation key for schedule policy
+	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
+	// AffinityConfigAnnoKey annotation key for multilevel schedule policy
+	AffinityConfigAnnoKey = "huawei.com/affinity-config"
+)
+
+// for cm
+const (
+	// CmRecoveringSuffix Recovering Suffix
+	CmRecoveringSuffix = "-Recovering"
+	// CmCardUnhealthySuffix CardUnhealthy Suffix
+	CmCardUnhealthySuffix = "-Unhealthy"
+	// CmCardNetworkUnhealthySuffix NetworkUnhealthy Suffix
+	CmCardNetworkUnhealthySuffix = "-NetworkUnhealthy"
+	// CmCardDPUUnhealthySuffix DPUUnhealthy Suffix
+	CmCardDPUUnhealthySuffix = "-DPUUnhealthy"
+	// CmFaultListSuffix FaultList Suffix
+	CmFaultListSuffix = "-Fault"
+)
+
+// node labels
+const (
+	// NodeLabelRecoverSuffix "-Recover"
+	NodeLabelRecoverSuffix = "-Recover"
+	// NodeLabelNetworkRecoverSuffix "-NetworkRecover"
+	NodeLabelNetworkRecoverSuffix = "-NetworkRecover"
+)
+
+const (
+	// SoftShareDeviceCount is the number of soft share device
+	SoftShareDeviceCount = 100
+	// SoftShareDeviceMaxAICoreQuota is the max aicore quota of soft share device
+	SoftShareDeviceMaxAICoreQuota = 100
+	// SoftShareDeviceConfigDir is the directory containing the config file of soft share device
+	SoftShareDeviceConfigDir = "/etc/enpu/"
+	// SoftShareDeviceConfigFileName is the name of soft share device config file
+	SoftShareDeviceConfigFileName = "npu_info.config"
+
+	// SchedulerSoftShareDevAicoreQuotaKey key for aicore quota of soft share device task
+	SchedulerSoftShareDevAicoreQuotaKey = "huawei.com/scheduler.softShareDev.aicoreQuota"
+	// SchedulerSoftShareDevHbmQuotaKey key for hbm quota of soft share device task
+	SchedulerSoftShareDevHbmQuotaKey = "huawei.com/scheduler.softShareDev.hbmQuota"
+	// SchedulerSoftShareDevPolicyKey key for policy of soft share device task
+	SchedulerSoftShareDevPolicyKey = "huawei.com/scheduler.softShareDev.policy"
+	// SchedulerSoftShareDevVNPUIdKey key for vnpu id of soft share device task
+	SchedulerSoftShareDevVNPUIdKey = "huawei.com/scheduler.softShareDev.vnpuId"
+
+	// SoftShareDeviceConfigPhysicalNPUId decide soft share device config physical npu id
+	SoftShareDeviceConfigPhysicalNPUId = "physical-npu-id"
+	// SoftShareDeviceConfigVirtualNPUId decide soft share device config virtual npu id
+	SoftShareDeviceConfigVirtualNPUId = "virtual-npu-id"
+	// SoftShareDeviceConfigAICoreQuota decide soft share device config aicore quota
+	SoftShareDeviceConfigAICoreQuota = "aicore-quota"
+	// SoftShareDeviceConfigHbmQuota decide soft share device config hbm quota
+	SoftShareDeviceConfigHbmQuota = "memory-quota"
+	// SoftShareDeviceConfigShmId decide soft share device config shm id
+	SoftShareDeviceConfigShmId = "shm-id"
+	// SoftShareDeviceConfigSchedulingPolicy decide soft share device config scheduling policy
+	SoftShareDeviceConfigSchedulingPolicy = "scheduling-policy"
+
+	// DefaultSoftShareDeviceConfigPerm default perm for soft share device config
+	DefaultSoftShareDeviceConfigPerm = 0644
+	// DefaultSoftShareDeviceConfigDirPerm default perm for soft share device config dir
+	DefaultSoftShareDeviceConfigDirPerm = 0755
+
+	// SoftShareDeviceSchedulingPolicyFixedShare scheduling policy for fixed share
+	SoftShareDeviceSchedulingPolicyFixedShare = "fixed-share"
+	// SoftShareDeviceSchedulingPolicyElastic scheduling policy for elastic share
+	SoftShareDeviceSchedulingPolicyElastic = "elastic"
+	// SoftShareDeviceSchedulingPolicyBestEffort scheduling policy for best effort
+	SoftShareDeviceSchedulingPolicyBestEffort = "best-effort"
+	// SoftShareDeviceSchedulingPolicyFixedShareInt scheduling policy for fixed share
+	SoftShareDeviceSchedulingPolicyFixedShareInt = "1"
+	// SoftShareDeviceSchedulingPolicyElasticInt scheduling policy for elastic share
+	SoftShareDeviceSchedulingPolicyElasticInt = "2"
+	// SoftShareDeviceSchedulingPolicyBestEffortInt scheduling policy for best effort
+	SoftShareDeviceSchedulingPolicyBestEffortInt = "3"
+)
+
+const (
+	// DeviceIPErrorCodeStr is the error device IP, it will due to ranktable generator error in version 1.0 and 1.2
+	DeviceIPErrorCodeStr = "-1"
+	// DeviceIPEmptyCodeStr is the empty device IP, this does not affect ranktable generation
+	DeviceIPEmptyCodeStr = ""
+	// DeviceIPDefaultCodeStr is the default device IP, this does not affect ranktable generation
+	DeviceIPDefaultCodeStr = "127.0.0.1"
 )

@@ -46,10 +46,42 @@ func ReadLimitBytes(path string, limitLength int) ([]byte, error) {
 	}
 	file, err := os.OpenFile(key, os.O_RDONLY, FileMode)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("open file with read-only and %04o mode failed", FileMode))
+		return nil, fmt.Errorf("open file with read-only and %04o mode failed: %v", FileMode, err)
 	}
 	defer file.Close()
 	buf := make([]byte, limitLength, limitLength)
+	l, err := file.Read(buf)
+	if err != nil {
+		return nil, fmt.Errorf("read file failed: %v", err)
+	}
+	return buf[0:l], nil
+}
+
+// ReadLimitBytesWithSymlink read limit length of contents from symlink path
+func ReadLimitBytesWithSymlink(path string, limitLength int, validateRealPath func(string) bool) ([]byte, error) {
+	if limitLength < 0 || limitLength > maxSize {
+		return nil, errors.New("the limit length is not valid")
+	}
+	resolvedPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return nil, fmt.Errorf("resolve symlinks failed: %v", err)
+	}
+	if !validateRealPath(resolvedPath) {
+		return nil, fmt.Errorf("resolve symlinks failed: invalid path %v", resolvedPath)
+	}
+	file, err := os.Open(resolvedPath)
+	if err != nil {
+		return nil, fmt.Errorf("open file failed: %v", err)
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("stat file failed: %v", err)
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("%s is not a regular file", resolvedPath)
+	}
+	buf := make([]byte, limitLength)
 	l, err := file.Read(buf)
 	if err != nil {
 		return nil, fmt.Errorf("read file failed: %v", err)

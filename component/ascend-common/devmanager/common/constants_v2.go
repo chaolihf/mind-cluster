@@ -1,0 +1,40 @@
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// Package common define common variable
+package common
+
+const (
+	// Ascend910A5 ascend 910 A5
+	Ascend910A5 = "Ascend910A5"
+	// MaxUBEIDByteLen max eid bytes len for device ub port
+	MaxUBEIDByteLen = 128 / 8
+
+	// MaxUBCNAByteLen max cna bytes len for device ub port
+	MaxUBCNAByteLen = 32 / 8
+
+	// A5300IBoardId board id of 300I A5
+	A5300IBoardId = 0x1a
+
+	// A5300IBoardId2 board id of 300I A5 specification 2
+	A5300IBoardId2 = 0x1b
+
+	// A5300IBoardId3 board id of 300I A5 specification 3
+	A5300IBoardId3 = 0x1c
+
+	// MaxDieID ascend 950 die max id
+	MaxDieID = 2
+	// MaxPortID ascend 950 port max id
+	MaxPortID = 9
+)
